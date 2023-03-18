@@ -1,8 +1,6 @@
 import { Avatar, Button, ButtonGroup, Cell, ContentCard, Div, Group, Panel, PanelHeader, PanelHeaderBack, ScreenSpinner } from "@vkontakte/vkui";
 import React, {useState} from "react";
 
-import bridge from '@vkontakte/vk-bridge';
-
 import { Icon20Stars } from '@vkontakte/icons';
 
 import 'swiper/css';
@@ -10,10 +8,10 @@ import 'swiper/css/virtual';
 import StrawberryBackend from "../api/SBBackend";
 
 
-export const Generate = ({id, accessToken, dataset, go}) => {
+export const Generate = ({id, dataset, go}) => {
     const targetGroup = dataset.targetGroup;
     const onGenerate = (groupId) => {
-        StrawberryBackend.generateText(accessToken, groupId).then((text) => {
+        StrawberryBackend.generateText(dataset.showSnackBar, groupId).then((text) => {
             if (text) {
                 go({
                     "to": "generation_result",
@@ -96,46 +94,21 @@ const WallPost = ({text, imgSrc, onBadResult, onGoodResult}) => {
     )
 }
 
-export const GenerationResult = ({id, dataset, go, accessToken}) => {
+export const GenerationResult = ({id, dataset, go}) => {
     const [isLoading, setIsLoading] = useState(false);
     const onBadResult = () => {
         setIsLoading(true);
-        StrawberryBackend.generateText(accessToken, dataset.targetGroup.id).then((text) => {
+        StrawberryBackend.generateText(dataset.showSnackBar, dataset.targetGroup.id).then((text) => {
             if (!text) return
             go({"genres": {"text": text}});
             setIsLoading(false);
         })
     };
     const onGoodResult = () => {
-        // опубликовать в группе
-        bridge.send("VKWebAppGetCommunityToken", {
-            app_id: 51575840,
-            group_id: dataset.targetGroup.id,
-            scope: 'manage'
-            })
-        .then((data) => { 
-            if (!data.access_token) return;
-            bridge.send('VKWebAppCallAPIMethod', {
-                method: 'wall.post',
-                params: {
-                    v: '5.131',
-                    access_token: data.access_token,
-                    owner_id: `-${dataset.targetGroup.id}`,
-                    message: dataset.genres.text
-                }
-            }).then((vkResp) => {
-                if (vkResp.response) {
-                    dataset.showSnackBar({text: "Ура, запись успешно опубликована!", type: "success"});
-                } else {
-                    dataset.showSnackBar({text: "Ошибка при публикации записи", type: "danger"});
-                }
-            });
+        setIsLoading(true);
+        StrawberryBackend.publishPost(dataset.showSnackBar, dataset.targetGroup.id, dataset.genres.text).then((resp) => {
+            setIsLoading(false);
         })
-        .catch((error) => {
-            // Ошибка
-            console.log(error);
-            dataset.showSnackBar({text: "Ошибка при подключении сообщества", type: "danger"});
-        });
     };
     return (
         <Panel id={id}>

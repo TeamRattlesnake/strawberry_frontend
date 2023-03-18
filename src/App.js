@@ -1,84 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import bridge from '@vkontakte/vk-bridge';
-import { View, ScreenSpinner, AdaptivityProvider, AppRoot, ConfigProvider, SplitLayout, SplitCol, Snackbar } from '@vkontakte/vkui';
+import { View, AdaptivityProvider, AppRoot, ConfigProvider, SplitLayout, SplitCol, Snackbar } from '@vkontakte/vkui';
 import '@vkontakte/vkui/dist/vkui.css';
 
 import Home from './panels/Home';
 import { Generate, GenerationResult } from './panels/Generation';
-import StrawberryBackend from './api/SBBackend';
 import { Icon28CancelCircleOutline, Icon28CheckCircleOutline, Icon28InfoCircleOutline } from '@vkontakte/icons';
 
-
-const parseQueryString = (string) => {
-	return string.slice(1).split('&')
-		.map((queryParam) => {
-			let kvp = queryParam.split('=');
-			return {key: kvp[0], value: kvp[1]}
-		})
-		.reduce((query, kvp) => {
-			query[kvp.key] = kvp.value;
-			return query
-		}, {})
-};
-
-const queryParams = parseQueryString(window.location.search);
-
-const getToken = (setToken, showShackBar) => {
-	const tokenData = localStorage.getItem("vk_token")
-	const authToken = tokenData?.token;
-	const expires = tokenData?.expires;
-	const timeStamp = Math.floor(Date.now() / 1000);
-	const update =  (expires - 100) < timeStamp;
-	const tokenExists = authToken != null;
-	setTimeout(() => getToken(setToken, showShackBar), (expires-timeStamp-90)*1000);
-	if (tokenExists && !update) {
-		setToken(authToken);
-	} else {
-		bridge.send('VKWebAppGetAuthToken', {
-			scope: 'groups,wall',
-			app_id: 51575840
-		}).then((data) => {
-			if (!data.access_token) throw "Отсутствует токен";
-			const addToken = (token, expires) => {
-				setToken(token);
-				localStorage.setItem("vk_token", {token,expires});
-			}
-			if (tokenExists) {
-				StrawberryBackend.renewToken(authToken, data.access_token).then((ok) => {
-					if (!ok) throw "Ошибка при обновлении токена";
-					addToken(data.access_token, data.expires);
-				}).catch((error) => {
-					console.log(error);
-					showShackBar({
-						text: "Ошибка при обновлении токена",
-						type: "danger",
-					});
-				})
-			} else {
-				StrawberryBackend.verifyToken(queryParams, data.access_token).then((ok) => {
-					if (!ok) throw "Ошибка при верификации токена";
-					addToken(data.access_token, data.expires);
-					showShackBar({
-						text: "Успешная авторизация!",
-						type: "success",
-					});
-				}).catch((error) => {
-					console.log(error);
-					showShackBar({
-						text: "Ошибка при верификации на сервере",
-						type: "danger",
-					});
-				})
-			}
-		}).catch((error) => {
-			console.log(error)
-			showShackBar({
-				text: "Ошибка при авторизации в ВК",
-				type: "danger",
-			});
-		})
-	}
-}
 
 const App = () => {
 	const [snackbar, setSnackbar] = useState(null);
@@ -123,8 +51,6 @@ const App = () => {
 		}
 	});
 	const [fetchedUser, setUser] = useState(null);
-	const [accessToken, setAccessToken] = useState(null);
-	const [popout, setPopout] = useState(<ScreenSpinner size='large' />);
 
 	useEffect(() => {
 		bridge.send('VKWebAppGetUserInfo')
@@ -133,12 +59,7 @@ const App = () => {
 		}).catch((error) => {
 			console.log(error);
 		})
-		getToken((token) => setAccessToken(token), dataset.showSnackBar);
 	}, []);
-
-	useEffect(() => {
-		accessToken && setPopout(null);
-	}, [accessToken]);
 
 	const go = data => {setDataset((prev) => {
 		return {...prev, ...data};
@@ -148,14 +69,14 @@ const App = () => {
 		<ConfigProvider>
 			<AdaptivityProvider>
 				<AppRoot>
-					<SplitLayout popout={popout}>
-						{accessToken && <SplitCol>
+					<SplitLayout>
+						<SplitCol>
 							<View activePanel={dataset.to}>
-								<Home id='home' go={go} accessToken={accessToken} fetchedUser={fetchedUser} dataset={dataset}/>
-								<Generate id="generate" go={go} accessToken={accessToken} dataset={dataset}/>
-								<GenerationResult id="generation_result" go={go} accessToken={accessToken} dataset={dataset}/>
+								<Home id='home' go={go} fetchedUser={fetchedUser} dataset={dataset}/>
+								<Generate id="generate" go={go} dataset={dataset}/>
+								<GenerationResult id="generation_result" go={go} dataset={dataset}/>
 							</View>
-						</SplitCol>}
+						</SplitCol>
 						{snackbar}
 					</SplitLayout>
 				</AppRoot>

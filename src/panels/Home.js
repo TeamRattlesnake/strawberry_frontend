@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import bridge from '@vkontakte/vk-bridge';
-import PropTypes from 'prop-types';
 
 import { Panel, PanelHeader, Group, Cell, Div, Avatar, RichCell, IconButton, Tabs, TabsItem, Spacing, Separator, Pagination, Spinner } from '@vkontakte/vkui';
 import { Icon24AddSquareOutline, Icon28SettingsOutline, Icon28StarsOutline, Icon24StarsOutline } from '@vkontakte/icons';
 import StrawberryBackend from '../api/SBBackend';
 
 
-const GroupList = ({ go, accessToken, dataset }) => {
+const GroupList = ({ go, dataset }) => {
 	const [groups, setGroups] = useState([]);
 	const [selected, setSelected] = useState("groupsConnected");
 	const [currentPage, setCurrentPage] = useState(1);
@@ -18,10 +16,10 @@ const GroupList = ({ go, accessToken, dataset }) => {
 
 	const onConnect = (group) => {
 		if (group.connected) return;
-		StrawberryBackend.fetchGroupPosts(accessToken, group.id, 100)
+		StrawberryBackend.fetchGroupPosts(dataset.showSnackBar, group.id, 100)
 		.then((texts) => {
 			if (texts.length > 0) {
-				StrawberryBackend.addGroup(accessToken, group.id, texts);
+				StrawberryBackend.addGroup(dataset.showSnackBar, group.id, texts);
 			} else {
 				dataset.showSnackBar({text: `Сообщество "${group.name}" не содержит данных для обучения.`, type: "danger"});
 			}
@@ -29,7 +27,7 @@ const GroupList = ({ go, accessToken, dataset }) => {
 	};
 
 	const onGenerate = (group) => {
-		StrawberryBackend.getGroup(accessToken, group.id).then((groupBack) => {
+		StrawberryBackend.getGroup(dataset.showSnackBar, group.id).then((groupBack) => {
 			if (groupBack.status !== 0) {
 				dataset.showSnackBar({text: `Сообщество "${group.name}" еще не готово!`, type: "info"});
 				return
@@ -55,78 +53,21 @@ const GroupList = ({ go, accessToken, dataset }) => {
 
     useEffect(() => {
 		setIsLoading(true);
+		let getGroups;
 		switch (selected) {
 			case "groupsConnected":
-				StrawberryBackend.getGroups(accessToken, (currentPage-1)*perPage, perPage).then((resp) => {
-					if (!resp.groups) {
-						setIsLoading(false);
-						return
-					}
-					bridge.send('VKWebAppCallAPIMethod', {
-						method: 'groups.getById',
-						params: {
-							v: '5.131',
-							group_ids: resp.groups.map(({id}) => id).join(','),
-							access_token: accessToken
-						}
-					}).then((vkResp) => {
-						if (vkResp.response) {
-							setGroups(resp.groups.map((group, idx) => {
-								return {...group, ...vkResp.response[idx]}
-							}));
-							setTotalPages(resp.count);
-						} else {
-							setGroups([]);
-						}
-						setIsLoading(false);
-					}).catch((error) => {
-						setGroups([]);
-						setIsLoading(false);
-						console.log(error);
-					})
-				});
+				getGroups = StrawberryBackend.getGroupsConnected;
 				break;
 			case "groupsManaged":
-				bridge.send('VKWebAppCallAPIMethod', {
-					method: 'groups.get',
-					params: {
-						filter: "moder",
-						extended: 1,
-						v: '5.131',
-						access_token: accessToken,
-						offset: (currentPage-1)*perPage,
-						count: perPage
-					}})
-					.then((data) => { 
-						if (data.response) {
-							setTotalPages(Math.ceil(data.response.count/perPage));
-							setGroups(data.response.items);
-							/*.map(async function (item) {
-								return await StrawberryBackend.getGroup(accessToken, item.id)
-								.then((group) => {
-									item.connected = Boolean(group);
-									return item
-								})
-								.catch((error) => {
-									console.log(error);
-									item.connected = false;
-									return item
-								})
-							}));
-							*/
-						} else {
-							setGroups([]);
-						}
-						setIsLoading(false);
-					})
-					.catch((error) => {
-						setGroups([]);
-						setIsLoading(false);
-						console.log(error);
-					}
-				);
+				getGroups = StrawberryBackend.getGroupsManaged;
 				break;
 		}
+		getGroups && getGroups(dataset.showSnackBar, currentPage, perPage)
+		.then((resp) => {
+			setTotalPages(resp.count);
+			setGroups(resp.items);
+			setIsLoading(false);
+		})
 	}, [selected, currentPage]);
 
 	return (
