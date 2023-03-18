@@ -30,7 +30,7 @@ const getToken = (setToken, showShackBar) => {
 	const timeStamp = Math.floor(Date.now() / 1000);
 	const update =  (expires - 100) < timeStamp;
 	const tokenExists = authToken != null;
-	setTimeout(() => getToken(setToken, showShackBar), expires-timeStamp-90);
+	setTimeout(() => getToken(setToken, showShackBar), (expires-timeStamp-90)*1000);
 	if (tokenExists && !update) {
 		setToken(authToken);
 	} else {
