@@ -16,6 +16,39 @@ const GroupList = ({ go, accessToken, dataset }) => {
 
 	const perPage = 10;
 
+	const onConnect = (group) => {
+		if (group.connected) return;
+		StrawberryBackend.fetchGroupPosts(accessToken, group.id, 100)
+		.then((texts) => {
+			if (texts.length > 0) {
+				StrawberryBackend.addGroup(accessToken, group.id, texts);
+			} else {
+				dataset.showSnackBar({text: `Сообщество "${group.name}" не содержит данных для обучения.`, type: "danger"});
+			}
+		});
+	};
+
+	const onGenerate = (group) => {
+		StrawberryBackend.getGroup(accessToken, group.id).then((groupBack) => {
+			if (groupBack.status !== 0) {
+				dataset.showSnackBar({text: `Сообщество "${group.name}" еще не готово!`, type: "info"});
+				return
+			}
+			go({
+				to: "generate",
+				targetGroup: group,
+			})
+		})
+	};
+
+	const onGroupClick = (group) => {
+		if (selected === "groupsConnected") {
+			onGenerate(group);
+		} else {
+			onConnect(group);
+		}
+	}
+
 	useEffect(() => {
 		setCurrentPage(1);
 	}, [selected]);
@@ -146,26 +179,7 @@ const GroupList = ({ go, accessToken, dataset }) => {
 							before={<Avatar src={group.photo_200}/>}
 							after={
 								<RichCell.Icon aria-hidden>
-									<IconButton onClick={() => {
-												if (group.connected) return;
-												if (selected === "groupsConnected") {
-													StrawberryBackend.getGroup(accessToken, group.id).then((groupBack) => {
-														if (groupBack.status !== 0) {
-															dataset.showSnackBar({text: `Сообщество "${group.name}" еще не готово!`, type: "info"});
-															return
-														}
-														go({
-															to: "generate",
-															targetGroup: group,
-														})
-													})
-												} else {
-													StrawberryBackend.addGroup(accessToken, group.id, [
-														"тест1",
-														"тест2"
-													])
-												}
-											}}>
+									<IconButton onClick={() => onGroupClick(group)}>
 										{selected === "groupsConnected" ? <Icon24StarsOutline aria-label='Сгенерировать'/> : (
 											group.connected ? <Icon28CheckCircleOutline fill="var(--vkui--color_icon_positive)" /> : <Icon24AddSquareOutline aria-label='Подключить'/>
 										)}

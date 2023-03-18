@@ -24,9 +24,14 @@ const parseQueryString = (string) => {
 const queryParams = parseQueryString(window.location.search);
 
 const getToken = (setToken, showShackBar) => {
-	authToken = localStorage.getItem("vk_token")
-	tokenExists = authToken != null
-	if (tokenExists) {
+	const tokenData = localStorage.getItem("vk_token")
+	const authToken = tokenData?.token;
+	const expires = tokenData?.expires;
+	const timeStamp = Math.floor(Date.now() / 1000);
+	const update =  (expires - 100) < timeStamp;
+	const tokenExists = authToken != null;
+	setTimeout(() => getToken(setToken, showShackBar), expires-timeStamp-90);
+	if (tokenExists && !update) {
 		setToken(authToken);
 	} else {
 		bridge.send('VKWebAppGetAuthToken', {
@@ -34,21 +39,37 @@ const getToken = (setToken, showShackBar) => {
 			app_id: 51575840
 		}).then((data) => {
 			if (!data.access_token) throw "Отсутствует токен";
-			StrawberryBackend.verifyToken(queryParams, data.access_token).then((ok) => {
-				if (!ok) throw "Ошибка при верификации токена";
-				setToken(data.access_token);
-				localStorage.setItem("vk_token", data.access_token);
-				showShackBar({
-					text: "Успешная авторизация!",
-					type: "success",
-				});
-			}).catch((error) => {
-				console.log(error);
-				showShackBar({
-					text: "Ошибка при верификации на сервере",
-					type: "danger",
-				});
-			})
+			const addToken = (token, expires) => {
+				setToken(token);
+				localStorage.setItem("vk_token", {token,expires});
+			}
+			if (tokenExists) {
+				StrawberryBackend.renewToken(authToken, data.access_token).then((ok) => {
+					if (!ok) throw "Ошибка при обновлении токена";
+					addToken(data.access_token, data.expires);
+				}).catch((error) => {
+					console.log(error);
+					showShackBar({
+						text: "Ошибка при обновлении токена",
+						type: "danger",
+					});
+				})
+			} else {
+				StrawberryBackend.verifyToken(queryParams, data.access_token).then((ok) => {
+					if (!ok) throw "Ошибка при верификации токена";
+					addToken(data.access_token, data.expires);
+					showShackBar({
+						text: "Успешная авторизация!",
+						type: "success",
+					});
+				}).catch((error) => {
+					console.log(error);
+					showShackBar({
+						text: "Ошибка при верификации на сервере",
+						type: "danger",
+					});
+				})
+			}
 		}).catch((error) => {
 			console.log(error)
 			showShackBar({

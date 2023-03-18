@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+
 const API_ENDPOINT = "https://strawberry.adefe.xyz/";
 
 class API {

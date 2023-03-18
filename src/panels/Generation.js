@@ -1,12 +1,10 @@
-import { Avatar, Button, ButtonGroup, Cell, ContentCard, Div, FormItem, Gallery, Group, IconButton, Panel, PanelHeader, PanelHeaderBack, ScreenSpinner, Snackbar, Textarea } from "@vkontakte/vkui";
-import React, {useState, useEffect } from "react";
+import { Avatar, Button, ButtonGroup, Cell, ContentCard, Div, Group, Panel, PanelHeader, PanelHeaderBack, ScreenSpinner } from "@vkontakte/vkui";
+import React, {useState} from "react";
 
 import bridge from '@vkontakte/vk-bridge';
 
-import { Icon20Stars, Icon28CheckCircleOutline, Icon28ThumbsDownOutline, Icon28ThumbsUpOutline } from '@vkontakte/icons';
+import { Icon20Stars } from '@vkontakte/icons';
 
-import { Virtual } from 'swiper';
-import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/virtual';
 import StrawberryBackend from "../api/SBBackend";
@@ -84,7 +82,7 @@ const WallPost = ({text, imgSrc, onBadResult, onGoodResult}) => {
                     appearance="negative"
                     onClick={onBadResult}
                 >
-                    Говно!
+                    Не нравится!
                 </Button>
                 <Button
                     stretched

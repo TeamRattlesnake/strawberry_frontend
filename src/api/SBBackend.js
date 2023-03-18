@@ -1,4 +1,5 @@
 import API from "./API.js";
+import bridge from '@vkontakte/vk-bridge';
 
 
 class StrawberryBackend extends API {
@@ -121,6 +122,28 @@ class StrawberryBackend extends API {
             }
         }).catch((error) => {
             console.log(error);
+        })
+    }
+
+    static async fetchGroupPosts(accessToken, groupId, numPosts) {
+        return await bridge.send('VKWebAppCallAPIMethod', {
+            method: 'wall.get',
+            params: {
+                v: '5.131',
+                access_token: accessToken,
+                owner_id: -groupId,
+                count: numPosts,
+                offset: 0,
+                filter: "owner"
+            }
+        }).then((resp) => {
+            if (resp.response?.items?.length > 0) {
+                return resp.response.items.map((item) => item.text);
+            }
+            return []
+        }).catch((error) => {
+            console.log(error);
+            return []
         })
     }
 }
