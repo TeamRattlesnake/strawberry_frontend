@@ -1,29 +1,36 @@
-import { Avatar, Button, ButtonGroup, Cell, ContentCard, Div, Group, Panel, PanelHeader, PanelHeaderBack, ScreenSpinner } from "@vkontakte/vkui";
+import { Avatar, Button, ButtonGroup, Cell, ContentCard, Div, FormItem, Group, Panel, PanelHeader, PanelHeaderBack, Paragraph, ScreenSpinner, Textarea } from "@vkontakte/vkui";
 import React, {useState} from "react";
 
 import { Icon20Stars } from '@vkontakte/icons';
 
-import 'swiper/css';
-import 'swiper/css/virtual';
 import StrawberryBackend from "../api/SBBackend";
 
 
 export const Generate = ({id, dataset, go}) => {
+    const hintPlaceholder = "Сегодня я хочу рассказать о..."
     const targetGroup = dataset.targetGroup;
-    const onGenerate = (groupId) => {
-        StrawberryBackend.generateText(dataset.showSnackBar, groupId).then((text) => {
+    const [hint, setHint] = useState(hintPlaceholder);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const onGenerate = (groupId, hint) => {
+        setIsGenerating(true);
+        StrawberryBackend.generateText(dataset.showSnackBar, groupId, hint).then((text) => {
             if (text) {
                 go({
                     "to": "generation_result",
                     "genres": {
                         "text": text
-                    }
+                    },
+                    "hint": hint,
                 })
             } else {
                 dataset.showSnackBar({text: "Ошибка генерации: сервер не вернул текст", type: "danger"});
             }
+            setIsGenerating(false);
         })
     }
+    const handleHintChange = event => {
+        setHint(event.target.value);
+    };
     return (
         <Panel id={id}>
 			<PanelHeader before={<PanelHeaderBack onClick={() => go({
@@ -40,18 +47,18 @@ export const Generate = ({id, dataset, go}) => {
                         {targetGroup.name}
                     </Cell>
                 }
-                {
-                    /*
-                    <FormItem top="Кратко опишите ваш пост">
-                        <Textarea placeholder="Описание поста"/>
-                    </FormItem>
-                    */
-                }
+                <FormItem top="Напишите начало поста">
+                    <Textarea
+                        placeholder={hintPlaceholder}
+                        onChange={handleHintChange}
+                    />
+                </FormItem>
                 <Div>
                     <Button
                         stretched
                         after={<Icon20Stars/>}
-                        onClick={() => onGenerate(targetGroup.id)}
+                        onClick={() => onGenerate(targetGroup.id, hint)}
+                        loading={isGenerating}
                     >
                         Сгенерировать
                     </Button>
@@ -64,13 +71,20 @@ export const Generate = ({id, dataset, go}) => {
 const WallPost = ({text, imgSrc, onBadResult, onGoodResult}) => {
     return (
         <>
-            <ContentCard
-                disabled
-                src="http://via.placeholder.com/640x360"
-                alt="Сгенерированный пост"
-                text={text}
-                maxHeight={200}
-            />
+            {
+                /*
+                <ContentCard
+                    disabled
+                    //src="http://via.placeholder.com/640x360"
+                    alt="Сгенерированный пост"
+                    text={text}
+                    maxHeight={200}
+                />
+                */
+            }
+            <Div weight="3" style={{
+                whiteSpace: 'pre-wrap'
+            }}>{text}</Div>
             <ButtonGroup
                 stretched
                 mode="horizontal"
@@ -98,7 +112,7 @@ export const GenerationResult = ({id, dataset, go}) => {
     const [isLoading, setIsLoading] = useState(false);
     const onBadResult = () => {
         setIsLoading(true);
-        StrawberryBackend.generateText(dataset.showSnackBar, dataset.targetGroup.id).then((text) => {
+        StrawberryBackend.generateText(dataset.showSnackBar, dataset.targetGroup.id, dataset.hint).then((text) => {
             if (!text) return
             go({"genres": {"text": text}});
             setIsLoading(false);
@@ -123,7 +137,6 @@ export const GenerationResult = ({id, dataset, go}) => {
                     <WallPost text={dataset.genres.text} onBadResult={onBadResult} onGoodResult={onGoodResult}/>
                 }
             </Group>
-            {snackbar}
         </Panel>
     )
 }

@@ -1,6 +1,6 @@
 import API from "./API.js";
 import bridge from '@vkontakte/vk-bridge';
-
+import axios from "axios";
 
 const parseQueryString = (string) => {
 	return string.slice(1).split('&')
@@ -63,19 +63,18 @@ class StrawberryBackend extends API {
         const authToken = tokenData?.token;
         const expires = tokenData?.expires;
         const timeStamp = Math.floor(Date.now() / 1000);
-        const update = true; // будем насильно обновлять каждый раз //expires && ((expires - 100) < timeStamp); 
+        const savedIP = tokenData?.ipn;
+        const ipResp = await axios.get('https://api.bigdatacloud.net/data/client-ip');
+        const ip = ipResp?.data?.ipNumeric;
+        const update = (expires && ((expires - 100) < timeStamp)) || (ip !== savedIP);
         const tokenExists = Boolean(authToken);
         const addToken = (token, expires) => {
-            localStorage.setItem("strawberry_data", JSON.stringify({token, expires}));
+            localStorage.setItem("strawberry_data", JSON.stringify({token, expires, ipn: ip}));
             return token
         }
         const verifyPromise = (token, expires) => StrawberryBackend.verifyToken(queryParams, token)
         .then((ok) => {
             if (!ok) throw "Ошибка при верификации токена";
-            showSnackBar && showSnackBar({
-                text: "Успешная авторизация!",
-                type: "success",
-            });
             return addToken(token, expires);
         })
         .catch((error) => {
@@ -96,7 +95,7 @@ class StrawberryBackend extends API {
             }).then((data) => {
                 // при успешном запросе на получение токена
                 if (!data.access_token) throw "Отсутствует токен"; // если поле токена отсутствует/пустое, выбрасываем ошибку
-                if (tokenExists) { // иначе, если предыдущий токен существует
+                if (tokenExists && (data.access_token !== authToken)) { // иначе, если предыдущий токен существует, проверяем его схожесть со старым
                     // обновляем этот предыдущий токен на новый, при этом при ошибке обновления верифицируем новый
                     return StrawberryBackend.renewToken(authToken, data.access_token)
                         .then((ok) => {
@@ -121,8 +120,8 @@ class StrawberryBackend extends API {
         }
     }
 
-    static async getGroups(showSnackBar, offset, count) {
-        const accessToken = await StrawberryBackend.getToken(showSnackBar);
+    static async getGroups(showSnackBar, offset, count, accessToken) {
+        accessToken = accessToken || await StrawberryBackend.getToken(showSnackBar);
         const defaultResp = {"count": 0, "groups": []};
         return this.makeRequest({
             method: "GET",
@@ -152,8 +151,8 @@ class StrawberryBackend extends API {
         })
     }
 
-    static async getGroup(showSnackBar, groupId) {
-        const accessToken = await StrawberryBackend.getToken(showSnackBar);
+    static async getGroup(showSnackBar, groupId, accessToken) {
+        accessToken = accessToken || await StrawberryBackend.getToken(showSnackBar);
         return this.makeRequest({
             method: "GET",
             url: "get_groups",
@@ -195,13 +194,14 @@ class StrawberryBackend extends API {
         })
     }
 
-    static async generateText(showSnackBar, groupId) {
+    static async generateText(showSnackBar, groupId, hint) {
         const accessToken = await StrawberryBackend.getToken(showSnackBar);
         return this.makeRequest({
             method: "POST",
             url: "generate_text",
             data: {
                 group_id: groupId,
+                hint,
                 vk_token: accessToken
             }
         })
@@ -277,7 +277,7 @@ class StrawberryBackend extends API {
 
     static async getGroupsConnected(showSnackBar, currentPage, perPage) {
         const accessToken = await StrawberryBackend.getToken(showSnackBar);
-        return StrawberryBackend.getGroups(showSnackBar, (currentPage-1)*perPage, perPage).then((resp) => {
+        let groupsData = await StrawberryBackend.getGroups(showSnackBar, (currentPage-1)*perPage, perPage, accessToken).then((resp) => {
             if (!resp?.groups || (resp?.groups?.length <= 0)) {
                 return {"count": 0, "items": []}
             }
@@ -304,11 +304,32 @@ class StrawberryBackend extends API {
                 return {"count": 0, "items": []}
             })
         });
+        groupsData.items = await Promise.all(groupsData.items.map((group) => {
+            return StrawberryBackend.getGroup(showSnackBar, group.id, accessToken)
+            .then((resp) => {
+                group.ready = resp.status === 0
+                return group
+            })
+            .catch((error) => {
+                console.log(error);
+                group.ready = false;
+                return group
+            })
+        }));
+        return groupsData;
+    }
+
+    static async getGroupsStatuses(showSnackBar, groupIds) {
+        const accessToken = await StrawberryBackend.getToken(showSnackBar);
+        return Promise.all(groupIds.map((groupId) => this.getGroup(showSnackBar, groupId, accessToken)))
+        .then((resps) => {
+            return resps.map((resp) => resp.status === 0)
+        })
     }
 
     static async getGroupsManaged(showSnackBar, currentPage, perPage) {
         const accessToken = await StrawberryBackend.getToken(showSnackBar);
-        return bridge.send('VKWebAppCallAPIMethod', {
+        let groupsData = await bridge.send('VKWebAppCallAPIMethod', {
             method: 'groups.get',
             params: {
                 filter: "moder",
@@ -324,19 +345,6 @@ class StrawberryBackend extends API {
                         "count": Math.ceil(data.response.count/perPage),
                         "items": data.response.items
                     }
-                    /*.map(async function (item) {
-                        return await StrawberryBackend.getGroup(accessToken, item.id)
-                        .then((group) => {
-                            item.connected = Boolean(group);
-                            return item
-                        })
-                        .catch((error) => {
-                            console.log(error);
-                            item.connected = false;
-                            return item
-                        })
-                    }));
-                    */
                 } else {
                     return {
                         "count": 0,
@@ -352,6 +360,20 @@ class StrawberryBackend extends API {
                 }
             }
         );
+        groupsData.items = await Promise.all(groupsData.items.map((item) => {
+            if (!item) return item;
+            return StrawberryBackend.getGroup(showSnackBar, item.id, accessToken)
+            .then((group) => {
+                console.log('item', item, 'group', group);
+                item.connected = Boolean(group && Object.keys(group).length > 0 && group.status !== null && group.status !== undefined && group.status != 2);
+                return item
+            })
+            .catch((_) => {
+                item.connected = false;
+                return item
+            })
+        }));
+        return groupsData;
     }
 }
 

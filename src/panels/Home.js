@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { Panel, PanelHeader, Group, Cell, Div, Avatar, RichCell, IconButton, Tabs, TabsItem, Spacing, Separator, Pagination, Spinner } from '@vkontakte/vkui';
-import { Icon24AddSquareOutline, Icon28SettingsOutline, Icon28StarsOutline, Icon24StarsOutline } from '@vkontakte/icons';
+import { Icon24AddSquareOutline, Icon28SettingsOutline, Icon28StarsOutline, Icon24StarsOutline, Icon28CheckCircleOutline, Icon24ClockOutline } from '@vkontakte/icons';
 import StrawberryBackend from '../api/SBBackend';
 
 
@@ -12,14 +12,22 @@ const GroupList = ({ go, dataset }) => {
 	const [totalPages, setTotalPages] = useState(1);
 	const [isLoading, setIsLoading] = useState(false);
 
+	let checkGroupsStatusesInterval;
+
 	const perPage = 10;
 
-	const onConnect = (group) => {
+	const onConnect = (group, idx) => {
 		if (group.connected) return;
 		StrawberryBackend.fetchGroupPosts(dataset.showSnackBar, group.id, 100)
 		.then((texts) => {
 			if (texts.length > 0) {
-				StrawberryBackend.addGroup(dataset.showSnackBar, group.id, texts);
+				StrawberryBackend.addGroup(dataset.showSnackBar, group.id, texts).then((_) => {
+					group.connected = true;
+					setGroups((prev) => {
+						prev[idx] = group;
+						return prev
+					});
+				});
 			} else {
 				dataset.showSnackBar({text: `Сообщество "${group.name}" не содержит данных для обучения.`, type: "danger"});
 			}
@@ -27,6 +35,7 @@ const GroupList = ({ go, dataset }) => {
 	};
 
 	const onGenerate = (group) => {
+		if (!group.ready) return;
 		StrawberryBackend.getGroup(dataset.showSnackBar, group.id).then((groupBack) => {
 			console.log('groupBack', groupBack);
 			if (groupBack.status !== 0) {
@@ -40,11 +49,11 @@ const GroupList = ({ go, dataset }) => {
 		})
 	};
 
-	const onGroupClick = (group) => {
+	const onGroupClick = (group, idx) => {
 		if (selected === "groupsConnected") {
 			onGenerate(group);
 		} else {
-			onConnect(group);
+			onConnect(group, idx);
 		}
 	}
 
@@ -60,6 +69,7 @@ const GroupList = ({ go, dataset }) => {
 				getGroups = StrawberryBackend.getGroupsConnected;
 				break;
 			case "groupsManaged":
+				clearInterval(checkGroupsStatusesInterval);
 				getGroups = StrawberryBackend.getGroupsManaged;
 				break;
 		}
@@ -67,6 +77,17 @@ const GroupList = ({ go, dataset }) => {
 		.then((resp) => {
 			setTotalPages(resp.count);
 			setGroups(resp.items);
+			if (selected === "groupsConnected") checkGroupsStatusesInterval = setInterval(() => {
+				StrawberryBackend.getGroupsStatuses(dataset.showSnackBar, resp.items.map((group) => group.id)).then((statuses) => {
+					setGroups((prev) => {
+						return prev.length == statuses.length ?
+						prev.map((item, ind) => {
+							item.ready = statuses[ind];
+							return item
+						}) : prev;
+					});
+				})
+			}, 10000);
 			setIsLoading(false);
 		})
 	}, [selected, currentPage]);
@@ -121,8 +142,13 @@ const GroupList = ({ go, dataset }) => {
 							before={<Avatar src={group.photo_200}/>}
 							after={
 								<RichCell.Icon aria-hidden>
-									<IconButton onClick={() => onGroupClick(group)}>
-										{selected === "groupsConnected" ? <Icon24StarsOutline aria-label='Сгенерировать'/> : (
+									<IconButton onClick={() => onGroupClick(group, idx)}>
+										{selected === "groupsConnected" ?
+										(
+											group.ready ? <Icon24StarsOutline aria-label='Сгенерировать'/> : <Icon24ClockOutline aria-label='Подождите'/>
+										)
+										:
+										(
 											group.connected ? <Icon28CheckCircleOutline fill="var(--vkui--color_icon_positive)" /> : <Icon24AddSquareOutline aria-label='Подключить'/>
 										)}
 									</IconButton>
@@ -157,19 +183,21 @@ const GroupList = ({ go, dataset }) => {
 const Home = ({ id, go, fetchedUser, accessToken, dataset }) => {
 	return (
 		<Panel id={id}>
-			<PanelHeader>Управление</PanelHeader>
-			{
-				fetchedUser &&
-				<Group>
-					<Cell
-						before={fetchedUser.photo_200 ? <Avatar src={fetchedUser.photo_200}/> : null}
-						subtitle={fetchedUser.city && fetchedUser.city.title ? fetchedUser.city.title : ''}
-					>
-						{`${fetchedUser.first_name} ${fetchedUser.last_name}`}
-					</Cell>
-				</Group>
-			}
-			<GroupList go={go} accessToken={accessToken} dataset={dataset}/>
+			<Group>
+				<PanelHeader>Управление</PanelHeader>
+				{
+					fetchedUser &&
+					<Group>
+						<Cell
+							before={fetchedUser.photo_200 ? <Avatar src={fetchedUser.photo_200}/> : null}
+							subtitle={fetchedUser.city && fetchedUser.city.title ? fetchedUser.city.title : ''}
+						>
+							{`${fetchedUser.first_name} ${fetchedUser.last_name}`}
+						</Cell>
+					</Group>
+				}
+				<GroupList go={go} accessToken={accessToken} dataset={dataset}/>
+			</Group>
 		</Panel>
 	);
 };
