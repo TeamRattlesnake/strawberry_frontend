@@ -63,51 +63,53 @@ class StrawberryBackend extends API {
         const authToken = tokenData?.token;
         const expires = tokenData?.expires;
         const timeStamp = Math.floor(Date.now() / 1000);
-        const update =  (expires - 100) < timeStamp;
+        const update = true; // будем насильно обновлять каждый раз //expires && ((expires - 100) < timeStamp); 
         const tokenExists = Boolean(authToken);
+        const addToken = (token, expires) => {
+            localStorage.setItem("strawberry_data", JSON.stringify({token, expires}));
+            return token
+        }
+        const verifyPromise = (token, expires) => StrawberryBackend.verifyToken(queryParams, token)
+        .then((ok) => {
+            if (!ok) throw "Ошибка при верификации токена";
+            showSnackBar && showSnackBar({
+                text: "Успешная авторизация!",
+                type: "success",
+            });
+            return addToken(token, expires);
+        })
+        .catch((error) => {
+            console.log(error);
+            showSnackBar && showSnackBar({
+                text: "Ошибка при верификации на сервере",
+                type: "danger",
+            });
+        })
         if (tokenExists && !update) {
+            await verifyPromise(authToken, expires);
             return authToken;
         } else {
+            // токен не существует локально или его нужно обновить
             return await bridge.send('VKWebAppGetAuthToken', {
                 scope: 'groups,wall',
-                app_id: 51575840
+                app_id: Number(queryParams['vk_app_id']), //51575840
             }).then((data) => {
-                console.log(data);
-                if (!data.access_token) throw "Отсутствует токен";
-                const addToken = (token, expires) => {
-                    localStorage.setItem("strawberry_data", JSON.stringify({token, expires}));
-                    return token
-                }
-                if (tokenExists) {
+                // при успешном запросе на получение токена
+                if (!data.access_token) throw "Отсутствует токен"; // если поле токена отсутствует/пустое, выбрасываем ошибку
+                if (tokenExists) { // иначе, если предыдущий токен существует
+                    // обновляем этот предыдущий токен на новый, при этом при ошибке обновления верифицируем новый
                     return StrawberryBackend.renewToken(authToken, data.access_token)
-                    .then((ok) => {
-                        if (!ok) throw "Ошибка при обновлении токена";
-                        return addToken(data.access_token, data.expires);
-                    })
-                    .catch((error) => {
-                        console.log(error);
-                        showSnackBar && showSnackBar({
-                            text: "Ошибка при обновлении токена",
-                            type: "danger",
-                        });
-                    })
+                        .then((ok) => {
+                            if (!ok) throw "Ошибка при обновлении токена";
+                            return addToken(data.access_token, data.expires);
+                        })
+                        .catch((_) => {
+                            // произошла ошибка при обновлении токена, тогда верифицируем новый
+                            return verifyPromise(data.access_token, data.expires)
+                    });
                 } else {
-                    return StrawberryBackend.verifyToken(queryParams, data.access_token)
-                    .then((ok) => {
-                        if (!ok) throw "Ошибка при верификации токена";
-                        showSnackBar && showSnackBar({
-                            text: "Успешная авторизация!",
-                            type: "success",
-                        });
-                        return addToken(data.access_token, data.expires);
-                    })
-                    .catch((error) => {
-                        console.log(error);
-                        showSnackBar && showSnackBar({
-                            text: "Ошибка при верификации на сервере",
-                            type: "danger",
-                        });
-                    })
+                    // предыдущего токена не существует, верифицируем новый
+                    return verifyPromise(data.access_token, data.expires);
                 }
             }).catch((error) => {
                 console.log(error)
@@ -162,8 +164,8 @@ class StrawberryBackend extends API {
         })
         .then((resp) => {
             if (this.isOK(resp)) {
-                let data = this.getData(resp);
-                return data ? {id: data.group_id, status: data.group_status} : {}
+                let data = this.getData(resp); // returning groups (array)
+                return (data && data.length > 0) ? {id: data[0].group_id, status: data[0].group_status} : {}
             }
             return {}
         })
@@ -241,7 +243,7 @@ class StrawberryBackend extends API {
     static async publishPost(showSnackBar, groupId, text) {
         // опубликовать в группе
         return bridge.send("VKWebAppGetCommunityToken", {
-            app_id: 51575840,
+            app_id: Number(queryParams['vk_app_id']), //51575840,
             group_id: groupId,
             scope: 'manage'
             })

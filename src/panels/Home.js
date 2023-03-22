@@ -28,6 +28,7 @@ const GroupList = ({ go, dataset }) => {
 
 	const onGenerate = (group) => {
 		StrawberryBackend.getGroup(dataset.showSnackBar, group.id).then((groupBack) => {
+			console.log('groupBack', groupBack);
 			if (groupBack.status !== 0) {
 				dataset.showSnackBar({text: `Сообщество "${group.name}" еще не готово!`, type: "info"});
 				return
