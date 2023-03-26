@@ -1,20 +1,5 @@
-import API from "./API.js";
+import API, { queryParams } from "./API.js";
 import bridge from '@vkontakte/vk-bridge';
-import axios from "axios";
-
-const parseQueryString = (string) => {
-	return string.slice(1).split('&')
-		.map((queryParam) => {
-			let kvp = queryParam.split('=');
-			return {key: kvp[0], value: kvp[1]}
-		})
-		.reduce((query, kvp) => {
-			query[kvp.key] = kvp.value;
-			return query
-		}, {})
-};
-
-const queryParams = parseQueryString(window.location.search);
 
 
 class StrawberryBackend extends API {
@@ -24,22 +9,6 @@ class StrawberryBackend extends API {
 
     static getData(response) {
         return response.data?.data
-    }
-
-    static async verifyToken(queryParams, accessToken) {
-        return this.makeRequest({
-            method: "POST",
-            url: "verify",
-            data: {
-                request: queryParams,
-                vk_token: accessToken
-            }
-        }).then((resp) => {
-            return this.isOK(resp)
-        }).catch((error) => {
-            console.log(error);
-            return false
-        });
     }
 
     static async renewToken(oldToken, newToken) {
@@ -58,76 +27,24 @@ class StrawberryBackend extends API {
         });
     }
 
-    static async getToken(showSnackBar) {
-        const tokenData = JSON.parse(localStorage.getItem("strawberry_data"));
-        const authToken = tokenData?.token;
-        const expires = tokenData?.expires;
-        const timeStamp = Math.floor(Date.now() / 1000);
-        const savedIP = tokenData?.ipn;
-        const ipResp = await axios.get('https://api.bigdatacloud.net/data/client-ip');
-        const ip = ipResp?.data?.ipNumeric;
-        const update = (expires && ((expires - 100) < timeStamp)) || (ip !== savedIP);
-        const tokenExists = Boolean(authToken);
-        const addToken = (token, expires) => {
-            localStorage.setItem("strawberry_data", JSON.stringify({token, expires, ipn: ip}));
-            return token
-        }
-        const verifyPromise = (token, expires) => StrawberryBackend.verifyToken(queryParams, token)
-        .then((ok) => {
-            if (!ok) throw "Ошибка при верификации токена";
-            return addToken(token, expires);
-        })
-        .catch((error) => {
+    static async getVKToken() {
+        return await bridge.send('VKWebAppGetAuthToken', {
+            scope: 'groups,wall',
+            app_id: Number(queryParams['vk_app_id']), //51575840
+        }).then((data) => {
+            return data?.access_token
+        }).catch((error) => {
             console.log(error);
-            showSnackBar && showSnackBar({
-                text: "Ошибка при верификации на сервере",
-                type: "danger",
-            });
+            return ""
         })
-        if (tokenExists && !update) {
-            await verifyPromise(authToken, expires);
-            return authToken;
-        } else {
-            // токен не существует локально или его нужно обновить
-            return await bridge.send('VKWebAppGetAuthToken', {
-                scope: 'groups,wall',
-                app_id: Number(queryParams['vk_app_id']), //51575840
-            }).then((data) => {
-                // при успешном запросе на получение токена
-                if (!data.access_token) throw "Отсутствует токен"; // если поле токена отсутствует/пустое, выбрасываем ошибку
-                if (tokenExists && (data.access_token !== authToken)) { // иначе, если предыдущий токен существует, проверяем его схожесть со старым
-                    // обновляем этот предыдущий токен на новый, при этом при ошибке обновления верифицируем новый
-                    return StrawberryBackend.renewToken(authToken, data.access_token)
-                        .then((ok) => {
-                            if (!ok) throw "Ошибка при обновлении токена";
-                            return addToken(data.access_token, data.expires);
-                        })
-                        .catch((_) => {
-                            // произошла ошибка при обновлении токена, тогда верифицируем новый
-                            return verifyPromise(data.access_token, data.expires)
-                    });
-                } else {
-                    // предыдущего токена не существует, верифицируем новый
-                    return verifyPromise(data.access_token, data.expires);
-                }
-            }).catch((error) => {
-                console.log(error)
-                showSnackBar && showSnackBar({
-                    text: "Ошибка при авторизации в ВК",
-                    type: "danger",
-                });
-            })
-        }
     }
 
-    static async getGroups(showSnackBar, offset, count, accessToken) {
-        accessToken = accessToken || await StrawberryBackend.getToken(showSnackBar);
+    static async getGroups(offset, count) {
         const defaultResp = {"count": 0, "groups": []};
         return this.makeRequest({
             method: "GET",
             url: "get_groups",
             params: {
-                vk_token: accessToken,
                 offset,
                 count
             }
@@ -151,13 +68,11 @@ class StrawberryBackend extends API {
         })
     }
 
-    static async getGroup(showSnackBar, groupId, accessToken) {
-        accessToken = accessToken || await StrawberryBackend.getToken(showSnackBar);
+    static async getGroup(groupId) {
         return this.makeRequest({
             method: "GET",
             url: "get_groups",
             params: {
-                vk_token: accessToken,
                 group_id: groupId,
             }
         })
@@ -174,13 +89,11 @@ class StrawberryBackend extends API {
         })
     }
 
-    static async addGroup(showSnackBar, groupId, texts) {
-        const accessToken = await StrawberryBackend.getToken(showSnackBar);
+    static async addGroup(groupId, texts) {
         return this.makeRequest({
             method: "POST",
             url: "add_group",
             data: {
-                vk_token: accessToken,
                 group_id: groupId,
                 texts
             }
@@ -194,15 +107,13 @@ class StrawberryBackend extends API {
         })
     }
 
-    static async generateText(showSnackBar, groupId, hint) {
-        const accessToken = await StrawberryBackend.getToken(showSnackBar);
+    static async generateText(groupId, hint) {
         return this.makeRequest({
             method: "POST",
             url: "generate_text",
             data: {
                 group_id: groupId,
-                hint,
-                vk_token: accessToken
+                hint
             }
         })
         .then((resp) => {
@@ -215,8 +126,8 @@ class StrawberryBackend extends API {
         })
     }
 
-    static async fetchGroupPosts(showSnackBar, groupId, numPosts) {
-        const accessToken = await StrawberryBackend.getToken(showSnackBar);
+    static async fetchGroupPosts(groupId, numPosts) {
+        const accessToken = await StrawberryBackend.getVKToken();
         return bridge.send('VKWebAppCallAPIMethod', {
             method: 'wall.get',
             params: {
@@ -275,9 +186,9 @@ class StrawberryBackend extends API {
         });
     }
 
-    static async getGroupsConnected(showSnackBar, currentPage, perPage) {
-        const accessToken = await StrawberryBackend.getToken(showSnackBar);
-        let groupsData = await StrawberryBackend.getGroups(showSnackBar, (currentPage-1)*perPage, perPage, accessToken).then((resp) => {
+    static async getGroupsConnected(currentPage, perPage) {
+        const accessToken = await StrawberryBackend.getVKToken();
+        let groupsData = await StrawberryBackend.getGroups((currentPage-1)*perPage, perPage).then((resp) => {
             if (!resp?.groups || (resp?.groups?.length <= 0)) {
                 return {"count": 0, "items": []}
             }
@@ -305,7 +216,7 @@ class StrawberryBackend extends API {
             })
         });
         groupsData.items = await Promise.all(groupsData.items.map((group) => {
-            return StrawberryBackend.getGroup(showSnackBar, group.id, accessToken)
+            return StrawberryBackend.getGroup(group.id)
             .then((resp) => {
                 group.ready = resp.status === 0
                 return group
@@ -319,16 +230,15 @@ class StrawberryBackend extends API {
         return groupsData;
     }
 
-    static async getGroupsStatuses(showSnackBar, groupIds) {
-        const accessToken = await StrawberryBackend.getToken(showSnackBar);
-        return Promise.all(groupIds.map((groupId) => this.getGroup(showSnackBar, groupId, accessToken)))
+    static async getGroupsStatuses(groupIds) {
+        return Promise.all(groupIds.map((groupId) => this.getGroup(groupId)))
         .then((resps) => {
             return resps.map((resp) => resp.status === 0)
         })
     }
 
-    static async getGroupsManaged(showSnackBar, currentPage, perPage) {
-        const accessToken = await StrawberryBackend.getToken(showSnackBar);
+    static async getGroupsManaged(currentPage, perPage) {
+        const accessToken = await StrawberryBackend.getVKToken();
         let groupsData = await bridge.send('VKWebAppCallAPIMethod', {
             method: 'groups.get',
             params: {
@@ -362,7 +272,7 @@ class StrawberryBackend extends API {
         );
         groupsData.items = await Promise.all(groupsData.items.map((item) => {
             if (!item) return item;
-            return StrawberryBackend.getGroup(showSnackBar, item.id, accessToken)
+            return StrawberryBackend.getGroup(item.id)
             .then((group) => {
                 console.log('item', item, 'group', group);
                 item.connected = Boolean(group && Object.keys(group).length > 0 && group.status !== null && group.status !== undefined && group.status != 2);

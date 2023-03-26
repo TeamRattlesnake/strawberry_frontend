@@ -13,7 +13,7 @@ export const Generate = ({id, dataset, go}) => {
     const [isGenerating, setIsGenerating] = useState(false);
     const onGenerate = (groupId, hint) => {
         setIsGenerating(true);
-        StrawberryBackend.generateText(dataset.showSnackBar, groupId, hint).then((text) => {
+        StrawberryBackend.generateText(groupId, hint).then((text) => {
             if (text) {
                 go({
                     "to": "generation_result",
@@ -68,23 +68,10 @@ export const Generate = ({id, dataset, go}) => {
     )
 }
 
-const WallPost = ({text, imgSrc, onBadResult, onGoodResult}) => {
+const WallPost = ({text, imgSrc, onBadResult, onGoodResult, onChange}) => {
     return (
         <>
-            {
-                /*
-                <ContentCard
-                    disabled
-                    //src="http://via.placeholder.com/640x360"
-                    alt="Сгенерированный пост"
-                    text={text}
-                    maxHeight={200}
-                />
-                */
-            }
-            <Div weight="3" style={{
-                whiteSpace: 'pre-wrap'
-            }}>{text}</Div>
+            <Textarea defaultValue={text} onChange={onChange}/>
             <ButtonGroup
                 stretched
                 mode="horizontal"
@@ -110,20 +97,25 @@ const WallPost = ({text, imgSrc, onBadResult, onGoodResult}) => {
 
 export const GenerationResult = ({id, dataset, go}) => {
     const [isLoading, setIsLoading] = useState(false);
+    const [textResult, setTextResult] = useState(dataset.genres.text);
     const onBadResult = () => {
         setIsLoading(true);
-        StrawberryBackend.generateText(dataset.showSnackBar, dataset.targetGroup.id, dataset.hint).then((text) => {
-            if (!text) return
-            go({"genres": {"text": text}});
+        StrawberryBackend.generateText(dataset.targetGroup.id, dataset.hint).then((text) => {
+            if (!text) throw "Отсутствует текст";
+            setTextResult(text);
+            setIsLoading(false);
+        }).catch((error) => {
+            console.log(error);
             setIsLoading(false);
         })
     };
     const onGoodResult = () => {
         setIsLoading(true);
-        StrawberryBackend.publishPost(dataset.showSnackBar, dataset.targetGroup.id, dataset.genres.text).then((resp) => {
+        StrawberryBackend.publishPost(dataset.targetGroup.id, textResult).then((_) => {
             setIsLoading(false);
         })
     };
+    const handleTextChange = e => setTextResylt(e.target.value);
     return (
         <Panel id={id}>
             <PanelHeader before={<PanelHeaderBack onClick={() => go({
@@ -134,7 +126,12 @@ export const GenerationResult = ({id, dataset, go}) => {
                     isLoading ?
                     <ScreenSpinner/>
                     :
-                    <WallPost text={dataset.genres.text} onBadResult={onBadResult} onGoodResult={onGoodResult}/>
+                    <WallPost
+                        text={textResult}
+                        onBadResult={onBadResult}
+                        onGoodResult={onGoodResult}
+                        onChange={handleTextChange}
+                    />
                 }
             </Group>
         </Panel>

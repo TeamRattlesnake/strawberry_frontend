@@ -18,10 +18,10 @@ const GroupList = ({ go, dataset }) => {
 
 	const onConnect = (group, idx) => {
 		if (group.connected) return;
-		StrawberryBackend.fetchGroupPosts(dataset.showSnackBar, group.id, 100)
+		StrawberryBackend.fetchGroupPosts(group.id, 100)
 		.then((texts) => {
 			if (texts.length > 0) {
-				StrawberryBackend.addGroup(dataset.showSnackBar, group.id, texts).then((_) => {
+				StrawberryBackend.addGroup(group.id, texts).then((_) => {
 					group.connected = true;
 					setGroups((prev) => {
 						prev[idx] = group;
@@ -36,7 +36,7 @@ const GroupList = ({ go, dataset }) => {
 
 	const onGenerate = (group) => {
 		if (!group.ready) return;
-		StrawberryBackend.getGroup(dataset.showSnackBar, group.id).then((groupBack) => {
+		StrawberryBackend.getGroup(group.id).then((groupBack) => {
 			console.log('groupBack', groupBack);
 			if (groupBack.status !== 0) {
 				dataset.showSnackBar({text: `Сообщество "${group.name}" еще не готово!`, type: "info"});
@@ -73,12 +73,12 @@ const GroupList = ({ go, dataset }) => {
 				getGroups = StrawberryBackend.getGroupsManaged;
 				break;
 		}
-		getGroups && getGroups(dataset.showSnackBar, currentPage, perPage)
+		getGroups && getGroups(currentPage, perPage)
 		.then((resp) => {
 			setTotalPages(resp.count);
 			setGroups(resp.items);
 			if (selected === "groupsConnected") checkGroupsStatusesInterval = setInterval(() => {
-				StrawberryBackend.getGroupsStatuses(dataset.showSnackBar, resp.items.map((group) => group.id)).then((statuses) => {
+				StrawberryBackend.getGroupsStatuses(resp.items.map((group) => group.id)).then((statuses) => {
 					setGroups((prev) => {
 						return prev.length == statuses.length ?
 						prev.map((item, ind) => {
