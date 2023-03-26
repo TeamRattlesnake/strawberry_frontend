@@ -158,13 +158,12 @@ class StrawberryBackend extends API {
             message: text
         })
         .then((data) => {
-            //return data.post_id ? true : false;
-            return true
+            return data.post_id ? 0 : 1;
         })
         .catch((error) => {
             // Ошибка
             console.log(error);
-            return false
+            return 2
         });
     }
 

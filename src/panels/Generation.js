@@ -115,11 +115,17 @@ export const GenerationResult = ({id, dataset, go}) => {
     const onGoodResult = () => {
         setIsLoading(true);
         StrawberryBackend.publishPost(dataset.targetGroup.id, textResult)
-        .then((ok) => {
-            if (ok) {
-                showSnackBar({text: "Ура, запись успешно опубликована!", type: "success"});
-            } else {
-                showSnackBar({text: "Ошибка при публикации записи", type: "danger"});
+        .then((status) => {
+            switch (status) {
+                case 0:
+                    showSnackBar({text: "Ура, запись успешно опубликована!", type: "success"});
+                    break;
+                case 1:
+                    showSnackBar({text: "Передумали?", type: "danger"});
+                    break;
+                default:
+                    showSnackBar({text: "Ошибка при публикации записи", type: "danger"});
+                    break;
             }
         })
         .finally(() => {
