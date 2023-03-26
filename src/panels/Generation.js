@@ -99,12 +99,16 @@ const WallPost = ({text, imgSrc, onBadResult, onGoodResult, onChange}) => {
 }
 
 export const GenerationResult = ({id, dataset, go}) => {
+    const showSnackBar = dataset.showSnackBar;
     const [isLoading, setIsLoading] = useState(false);
     const [textResult, setTextResult] = useState(dataset.genres.text);
     const onBadResult = () => {
         setIsLoading(true);
         StrawberryBackend.generateText(dataset.targetGroup.id, dataset.hint).then((text) => {
-            if (!text) throw "Отсутствует текст";
+            if (!text) {
+                showSnackBar({text: "Ошибка: сервер не вернул текст", type: "danger"});
+                return
+            }
             setTextResult(text);
         }).catch((error) => {
             console.log(error);
