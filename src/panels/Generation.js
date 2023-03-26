@@ -1,4 +1,4 @@
-import { Avatar, Button, ButtonGroup, Cell, ContentCard, Div, FormItem, Group, Panel, PanelHeader, PanelHeaderBack, Paragraph, ScreenSpinner, Textarea } from "@vkontakte/vkui";
+import { Avatar, Button, ButtonGroup, Cell, Div, FormItem, Group, Panel, PanelHeader, PanelHeaderBack, ScreenSpinner, Textarea } from "@vkontakte/vkui";
 import React, {useState} from "react";
 
 import { Icon20Stars } from '@vkontakte/icons';
@@ -75,6 +75,9 @@ const WallPost = ({text, imgSrc, onBadResult, onGoodResult, onChange}) => {
             <ButtonGroup
                 stretched
                 mode="horizontal"
+                style={{
+                    marginTop: "0.5rem",
+                }}
             >
                 <Button
                     stretched
@@ -103,19 +106,27 @@ export const GenerationResult = ({id, dataset, go}) => {
         StrawberryBackend.generateText(dataset.targetGroup.id, dataset.hint).then((text) => {
             if (!text) throw "Отсутствует текст";
             setTextResult(text);
-            setIsLoading(false);
         }).catch((error) => {
             console.log(error);
+        }).finally(() => {
             setIsLoading(false);
         })
     };
     const onGoodResult = () => {
         setIsLoading(true);
-        StrawberryBackend.publishPost(dataset.targetGroup.id, textResult).then((_) => {
+        StrawberryBackend.publishPost(dataset.targetGroup.id, textResult)
+        .then((ok) => {
+            if (ok) {
+                showSnackBar({text: "Ура, запись успешно опубликована!", type: "success"});
+            } else {
+                showSnackBar({text: "Ошибка при публикации записи", type: "danger"});
+            }
+        })
+        .finally(() => {
             setIsLoading(false);
         })
     };
-    const handleTextChange = e => setTextResylt(e.target.value);
+    const handleTextChange = e => setTextResult(e.target.value);
     return (
         <Panel id={id}>
             <PanelHeader before={<PanelHeaderBack onClick={() => go({

@@ -19,8 +19,8 @@ const parseQueryStringToObj = (qString) => {
 		}, {})
 };
 
-export const quesryStr = parseQueryString(window.location.search);
-export const queryParams = parseQueryStringToObj(quesryStr);
+export const queryStr = parseQueryString(window.location.search);
+export const queryParams = parseQueryStringToObj(queryStr);
 
 class API {
     static makeRequest(options) {

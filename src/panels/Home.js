@@ -88,6 +88,7 @@ const GroupList = ({ go, dataset }) => {
 					});
 				})
 			}, 10000);
+		}).finally(() => {
 			setIsLoading(false);
 		})
 	}, [selected, currentPage]);

@@ -151,37 +151,19 @@ class StrawberryBackend extends API {
         })
     }
 
-    static async publishPost(showSnackBar, groupId, text) {
+    static async publishPost(groupId, text) {
         // опубликовать в группе
-        return bridge.send("VKWebAppGetCommunityToken", {
-            app_id: Number(queryParams['vk_app_id']), //51575840,
-            group_id: groupId,
-            scope: 'manage'
-            })
-        .then((data) => { 
-            if (!data.access_token) return;
-            return bridge.send('VKWebAppCallAPIMethod', {
-                method: 'wall.post',
-                params: {
-                    v: '5.131',
-                    access_token: data.access_token,
-                    owner_id: -groupId,
-                    message: text
-                }
-            })
-            .then((vkResp) => {
-                if (vkResp.response) {
-                    showSnackBar({text: "Ура, запись успешно опубликована!", type: "success"});
-                } else {
-                    showSnackBar({text: "Ошибка при публикации записи", type: "danger"});
-                }
-                return vkResp.response ? true : false
-            });
+        return bridge.send('VKWebAppShowWallPostBox', {
+            owner_id: -groupId,
+            message: text
+        })
+        .then((data) => {
+            //return data.post_id ? true : false;
+            return true
         })
         .catch((error) => {
             // Ошибка
             console.log(error);
-            showSnackBar({text: "Ошибка при подключении сообщества", type: "danger"});
             return false
         });
     }
