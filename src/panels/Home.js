@@ -43,7 +43,7 @@ const GroupList = ({ go, dataset }) => {
 				return
 			}
 			go({
-				to: "generate",
+				to: "text_editor",
 				targetGroup: group,
 			})
 		})

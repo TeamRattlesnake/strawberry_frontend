@@ -6,6 +6,7 @@ import '@vkontakte/vkui/dist/vkui.css';
 import Home from './panels/Home';
 import { Generate, GenerationResult } from './panels/Generation';
 import { Icon28CancelCircleOutline, Icon28CheckCircleOutline, Icon28InfoCircleOutline } from '@vkontakte/icons';
+import TextEditor from './panels/TextEditor';
 
 
 const App = () => {
@@ -73,8 +74,7 @@ const App = () => {
 						<SplitCol>
 							<View activePanel={dataset.to}>
 								<Home id='home' go={go} fetchedUser={fetchedUser} dataset={dataset}/>
-								<Generate id="generate" go={go} dataset={dataset}/>
-								<GenerationResult id="generation_result" go={go} dataset={dataset}/>
+								<TextEditor id="text_editor" go={go} dataset={dataset}/>
 							</View>
 						</SplitCol>
 						{snackbar}

@@ -107,11 +107,12 @@ class StrawberryBackend extends API {
         })
     }
 
-    static async generateText(groupId, hint) {
+    static async generate(serviceName, groupId, hint) {
         return this.makeRequest({
             method: "POST",
-            url: "generate_text",
+            url: "generate",
             data: {
+                service_name: serviceName,
                 group_id: groupId,
                 hint
             }
