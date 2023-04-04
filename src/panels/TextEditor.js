@@ -90,17 +90,18 @@ const TextEditor = ({id, go, dataset}) => {
     }
 
     const handlePublish = () => {
-        StrawberryBackend.publishPost(dataset.targetGroup.id, textResult)
+        StrawberryBackend.publishPost(dataset.targetGroup.id, text)
         .then((status) => {
+            console.log(status);
             switch (status) {
                 case 0:
-                    showSnackBar({text: "Ура, запись успешно опубликована!", type: "success"});
+                    dataset.showSnackBar({text: "Ура, запись успешно опубликована!", type: "success"});
                     break;
                 case 1:
-                    showSnackBar({text: "Передумали?", type: "danger"});
+                    dataset.showSnackBar({text: "Передумали?", type: "danger"});
                     break;
                 default:
-                    showSnackBar({text: "Ошибка при публикации записи", type: "danger"});
+                    dataset.showSnackBar({text: "Ошибка при публикации записи", type: "danger"});
                     break;
             }
         })
