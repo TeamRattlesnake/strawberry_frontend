@@ -1,10 +1,9 @@
-import { ActionSheet, ActionSheetDefaultIosCloseItem, ActionSheetItem, Avatar, Button, ButtonGroup, Cell, CellButton, Div, FormItem, Group, Panel, PanelHeader, PanelHeaderBack, ScreenSpinner, SplitCol, SplitLayout, Textarea } from "@vkontakte/vkui";
-import React, {useRef, useState} from "react";
+import { ActionSheet, ActionSheetDefaultIosCloseItem, ActionSheetItem, Avatar, Button, ButtonGroup, Cell, CellButton, Div, FormItem, Group, Panel, PanelHeader, PanelHeaderBack, ScreenSpinner, Spinner, SplitCol, SplitLayout, Textarea } from "@vkontakte/vkui";
+import React, {useEffect, useRef, useState} from "react";
 
 import { Icon20Stars } from '@vkontakte/icons';
 
 import StrawberryBackend from "../api/SBBackend";
-
 
 const Service = {
     TEXTGEN: "text_gen",
@@ -13,14 +12,91 @@ const Service = {
     BERT: "bert"
 };
 
+const TextareaDropdown = ({isLoading, items, onClick, onClose, position}) => {
+    return (
+        <select style={{
+            position: "absolute",
+            top: position.top,
+            left: position.left,
+        }}>
+            {
+                isLoading ?
+                <Spinner/>
+                :
+                items.map((item) => {
+                    return (
+                        <option onClick={() => {
+                            onClick(value);
+                            onClose();
+                        }} value={item}>{item}</option>
+                    )
+                })
+            }
+        </select>
+    )
+}
+
+const TextareaCustom = ({onSelect, onItemClick, ...props}) => {
+    const textAreaRef = useRef();
+    const [dropdownShown, setDropdownShow] = useState(false);
+    const [dropdownLoading, setDropdownLoading] = useState(false);
+    const [dropdownItems, setDropdownItems] = useState([]);
+    let cursorPositionTop = null;
+    let cursorPositionLeft = null;
+    let selectionStart = null;
+    let selectionEnd = null;
+    useEffect(() => {
+        const handleSelectionChange = () => {
+            console.log("selection changed");
+            selectionStart = textAreaRef.current.selectionStart;
+            selectionEnd = textAreaRef.current.selectionEnd;
+            cursorPositionTop = textAreaRef.current.offsetTop + textAreaRef.current.scrollTop;
+            cursorPositionLeft = textAreaRef.current.offsetLeft + textAreaRef.current.scrollLeft;
+            const textMasked = text.slice(undefined, selectionStart) + "[MASK]" + text.slice(selectionEnd, undefined);
+            setDropdownShow(true);
+            setDropdownLoading(true);
+            onSelect(textMasked)
+            .then((itemsData) => setDropdownItems(itemsData))
+            .catch((_) => setDropdownShow(false))
+            .finally(() => setDropdownLoading(false));
+        };
+        if (onSelect && onItemClick) {
+            textAreaRef.current.addEventListener('click', () => console.log("check click"));
+            textAreaRef.current.addEventListener('selectionchange', handleSelectionChange);
+            return () => {
+                textAreaRef.current.removeEventListener('selectionchange', handleSelectionChange);
+            };
+        }
+      }, [onSelect, onItemClick]);
+    return (
+        <Textarea
+            style={{
+                position: "relative"
+            }}
+            getRootRef={textAreaRef}
+            {...props}
+        >
+            {
+                dropdownShown &&
+                <TextareaDropdown
+                    isLoading={dropdownLoading}
+                    items={dropdownItems}
+                    onClose={() => setDropdownShow(false)}
+                    onClick={(value) => {onItemClick(value, selectionStart, selectionEnd)}}
+                    position={{top: cursorPositionTop, left: cursorPositionLeft}}
+                />
+            }
+        </Textarea>
+    )
+}
+
 const ServiceList = ({activeService, onServiceClick, onClose, targetRef}) => {
     const renderItem = (service, alias) => {
-        console.log("alias", alias);
         return (
             <ActionSheetItem
                 onChange={onServiceClick}
                 checked={activeService === service}
-                name={service}
+                name={alias}
                 value={service}
                 autoClose
                 selectable
@@ -48,10 +124,30 @@ const ServiceList = ({activeService, onServiceClick, onClose, targetRef}) => {
     )
 }
 
+/*
+onSelect={
+    service === Service.BERT ?
+    (text) => StrawberryBackend.generate(service, groupId, text).then((text) => {
+            return text.split(',');
+        })
+    :
+    null
+}
+onItemClick={
+    service === Service.BERT ?
+    (value, start, stop) => setText((prevText) => {
+        return prevText.slice(undefined, start)+value+prevText.slice(stop, undefined)
+    })
+    :
+    null
+}
+*/
+
 const TextEditor = ({id, go, dataset}) => {
     const group = dataset.targetGroup;
     const groupId = group.id;
     const [service, setService] = useState(Service.TEXTGEN);
+    const [serviceAlias, setServiceAlias] = useState("Многословная генерация текста");
     const [popout, setPopout] = useState(null);
     const [text, setText] = useState("");
     const [isLoading, setIsLoading] = useState(false);
@@ -62,10 +158,9 @@ const TextEditor = ({id, go, dataset}) => {
     }
 
     const handleServiceClick = (e) => {
-        console.log('e', e);
-        console.log('value', e.target.value);
-        console.log('target', e.target);
+        console.log('val', e.target.name);
         setService(e.target.value);
+        setServiceAlias(e.target.name)
         setPopout(null);
     }
 
@@ -145,7 +240,7 @@ const TextEditor = ({id, go, dataset}) => {
                                     />
                                 )}
                             >
-                                {service}
+                                {serviceAlias}
                             </CellButton>
                         </Div>
                         <Div>
