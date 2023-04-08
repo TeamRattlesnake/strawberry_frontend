@@ -145,7 +145,7 @@ onItemClick={
 
 const TextEditor = ({id, go, dataset}) => {
     const group = dataset.targetGroup;
-    const groupId = group.id;
+    const [resultId, setResultId] = useState(null);
     const [service, setService] = useState(Service.TEXTGEN);
     const [serviceAlias, setServiceAlias] = useState("Многословная генерация текста");
     const [popout, setPopout] = useState(null);
@@ -158,7 +158,6 @@ const TextEditor = ({id, go, dataset}) => {
     }
 
     const handleServiceClick = (e) => {
-        console.log('val', e.target.name);
         setService(e.target.value);
         setServiceAlias(e.target.name)
         setPopout(null);
@@ -169,17 +168,35 @@ const TextEditor = ({id, go, dataset}) => {
         if (service === Service.BERT) {
             hint += " [MASK]";
         }
+        let generate
+        switch (service) {
+            case Service.BERT:
+                generate = StrawberryBackend.unmaskText;
+                break;
+            case Service.REPHRASE:
+                generate = StrawberryBackend.rephraseText;
+                break;
+            case Service.SUMMARIZE:
+                generate = StrawberryBackend.summarizeText;
+                break
+            default:
+                generate = StrawberryBackend.appendText;
+        }
         setIsLoading(true);
-        StrawberryBackend.generate(service, groupId, hint)
-        .then((text) => {
-            if (service === Service.BERT) {
-                let words = text.split(',');
+        generate(dataset.targetGroup.texts, hint)
+        .then(({text_data, result_id}) => {
+            setResultId(result_id);
+            /*
+            if (service == Service.TEXTGEN) {
                 setText((prevText) => {
-                    return prevText+" "+words[0];
+                    return prevText+text_data;
                 })
-            } else {
-                setText(text);
-            }
+            */
+            setText(text_data);
+        })
+        .catch((error) => {
+            console.log(error);
+            dataset.showSnackBar({text: "Неизвестная ошибка", type: "danger"});
         })
         .finally(() => setIsLoading(false));
     }
@@ -202,12 +219,21 @@ const TextEditor = ({id, go, dataset}) => {
         })
     }
 
+    const onFeedback = (score) => {
+        if (!resultId) return;
+        StrawberryBackend.sendFeedback(resultId, score)
+        .then((ok) => {
+            if (ok) dataset.showSnackBar({text: `Спасибо за ваш отзыв!`, type: "success"});
+            else dataset.showSnackBar({text: `Не удалось отправить отзыв`, type: "danger"});
+        })
+    }
+    
     const onBadResult = e => {
-        dataset.showSnackBar({text: `Спасибо за ваш отзыв!`, type: "success"});
+        onFeedback(-1)
     }
 
     const onGoodResult = e => {
-        dataset.showSnackBar({text: `Спасибо за ваш отзыв!`, type: "success"});
+        onFeedback(1)
     }
 
     return (
@@ -223,7 +249,7 @@ const TextEditor = ({id, go, dataset}) => {
                             <Cell
                                 before={group.photo_200 ? <Avatar src={group.photo_200}/> : null}
                                 subtitle={group.screen_name}
-                                //href={`vk.com/${targetGroup.screen_name}`}
+                                href={`vk.com/${dataset.targetGroup.screen_name}`}
                             >
                                 {group.name}
                             </Cell>
@@ -274,7 +300,7 @@ const TextEditor = ({id, go, dataset}) => {
                         <Div>
                             <ButtonGroup stretched>
                                 <Button
-                                    //stretched
+                                    disabled={!resultId}
                                     appearance="negative"
                                     onClick={onBadResult}
                                 >👎</Button>
@@ -286,7 +312,7 @@ const TextEditor = ({id, go, dataset}) => {
                                     Опубликовать
                                 </Button>
                                 <Button
-                                    //stretched
+                                    disabled={!resultId}
                                     appearance="positive"
                                     onClick={onGoodResult}
                                 >👍</Button>

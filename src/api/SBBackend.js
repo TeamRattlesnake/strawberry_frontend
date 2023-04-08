@@ -2,7 +2,7 @@ import API, { queryParams } from "./API.js";
 import bridge from '@vkontakte/vk-bridge';
 
 
-class StrawberryBackend extends API {
+class StrawberryBackend {
     static isOK(response) {
         return response.status === 200 && response.data?.status === 0
     }
@@ -12,7 +12,7 @@ class StrawberryBackend extends API {
     }
 
     static async renewToken(oldToken, newToken) {
-        return this.makeRequest({
+        return API.makeRequest({
             method: "POST",
             url: "renew",
             data: {
@@ -20,7 +20,7 @@ class StrawberryBackend extends API {
                 new_vk_token: newToken
             }
         }).then((resp) => {
-            return this.isOK(resp)
+            return StrawberryBackend.isOK(resp)
         }).catch((error) => {
             console.log(error)
             return false
@@ -39,9 +39,10 @@ class StrawberryBackend extends API {
         })
     }
 
+    /*
     static async getGroups(offset, count) {
         const defaultResp = {"count": 0, "groups": []};
-        return this.makeRequest({
+        return API.makeRequest({
             method: "GET",
             url: "get_groups",
             params: {
@@ -50,8 +51,8 @@ class StrawberryBackend extends API {
             }
         })
         .then((resp) => {
-            if (this.isOK(resp)) {
-                let data = this.getData(resp) || []
+            if (StrawberryBackend.isOK(resp)) {
+                let data = StrawberryBackend.getData(resp) || []
                 data = {
                     count: resp.data.count || 0,
                     groups: data.map((group) => {
@@ -69,7 +70,7 @@ class StrawberryBackend extends API {
     }
 
     static async getGroup(groupId) {
-        return this.makeRequest({
+        return API.makeRequest({
             method: "GET",
             url: "get_groups",
             params: {
@@ -77,8 +78,8 @@ class StrawberryBackend extends API {
             }
         })
         .then((resp) => {
-            if (this.isOK(resp)) {
-                let data = this.getData(resp); // returning groups (array)
+            if (StrawberryBackend.isOK(resp)) {
+                let data = StrawberryBackend.getData(resp); // returning groups (array)
                 return (data && data.length > 0) ? {id: data[0].group_id, status: data[0].group_status} : {}
             }
             return {}
@@ -90,7 +91,7 @@ class StrawberryBackend extends API {
     }
 
     static async addGroup(groupId, texts) {
-        return this.makeRequest({
+        return API.makeRequest({
             method: "POST",
             url: "add_group",
             data: {
@@ -99,27 +100,102 @@ class StrawberryBackend extends API {
             }
         })
         .then((resp) => {
-            return this.isOK(resp)
+            return StrawberryBackend.isOK(resp)
         })
         .catch((error) => {
             console.log(error);
             return false
         })
     }
+    */
 
-    static async generate(serviceName, groupId, hint) {
-        return this.makeRequest({
+    static async sendFeedback(resultId, score) {
+        return API.makeRequest({
             method: "POST",
-            url: "generate",
+            url: "send_feedback",
             data: {
-                service_name: serviceName,
-                group_id: groupId,
+                result_id: resultId,
+                score,
+            }
+        })
+        .then((resp) => {
+            return StrawberryBackend.isOK(resp);
+        })
+        .catch((error) => {
+            console.log(error)
+            return false;
+        })
+    }
+
+    static async appendText(contextData, hint) {
+        return API.makeRequest({
+            method: "POST",
+            url: "append_text",
+            data: {
+                context_data: contextData,
                 hint
             }
         })
         .then((resp) => {
-            if (this.isOK(resp)) {
-                return this.getData(resp)
+            if (StrawberryBackend.isOK(resp)) {
+                return StrawberryBackend.getData(resp);
+            }
+        })
+        .catch((error) => {
+            console.log(error);
+        })
+    }
+
+    static async rephraseText(contextData, hint) {
+        return API.makeRequest({
+            method: "POST",
+            url: "rephrase_text",
+            data: {
+                context_data: contextData,
+                hint
+            }
+        })
+        .then((resp) => {
+            if (StrawberryBackend.isOK(resp)) {
+                return StrawberryBackend.getData(resp);
+            }
+        })
+        .catch((error) => {
+            console.log(error);
+        })
+    }
+
+    static async summarizeText(contextData, hint) {
+        return API.makeRequest({
+            method: "POST",
+            url: "summarize_text",
+            data: {
+                context_data: contextData,
+                hint
+            }
+        })
+        .then((resp) => {
+            if (StrawberryBackend.isOK(resp)) {
+                return StrawberryBackend.getData(resp);
+            }
+        })
+        .catch((error) => {
+            console.log(error);
+        })
+    }
+
+    static async unmaskText(contextData, hint) {
+        return API.makeRequest({
+            method: "POST",
+            url: "unmask_text",
+            data: {
+                context_data: contextData,
+                hint
+            }
+        })
+        .then((resp) => {
+            if (StrawberryBackend.isOK(resp)) {
+                return StrawberryBackend.getData(resp);
             }
         })
         .catch((error) => {
@@ -168,6 +244,7 @@ class StrawberryBackend extends API {
         });
     }
 
+    /*
     static async getGroupsConnected(currentPage, perPage) {
         const accessToken = await StrawberryBackend.getVKToken();
         let groupsData = await StrawberryBackend.getGroups((currentPage-1)*perPage, perPage).then((resp) => {
@@ -213,11 +290,12 @@ class StrawberryBackend extends API {
     }
 
     static async getGroupsStatuses(groupIds) {
-        return Promise.all(groupIds.map((groupId) => this.getGroup(groupId)))
+        return Promise.all(groupIds.map((groupId) => StrawberryBackend.getGroup(groupId)))
         .then((resps) => {
             return resps.map((resp) => resp.status === 0)
         })
     }
+    */
 
     static async getGroupsManaged(currentPage, perPage) {
         const accessToken = await StrawberryBackend.getVKToken();
@@ -252,6 +330,7 @@ class StrawberryBackend extends API {
                 }
             }
         );
+        /*
         groupsData.items = await Promise.all(groupsData.items.map((item) => {
             if (!item) return item;
             return StrawberryBackend.getGroup(item.id)
@@ -265,6 +344,7 @@ class StrawberryBackend extends API {
                 return item
             })
         }));
+        */
         return groupsData;
     }
 }
