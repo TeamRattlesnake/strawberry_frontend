@@ -4,8 +4,8 @@ import { View, AdaptivityProvider, AppRoot, ConfigProvider, SplitLayout, SplitCo
 import '@vkontakte/vkui/dist/vkui.css';
 
 import Home from './panels/Home';
+import GenerationPage from './panels/GenerationPage';
 import { Icon28CancelCircleOutline, Icon28CheckCircleOutline, Icon28InfoCircleOutline } from '@vkontakte/icons';
-import TextEditor from './panels/TextEditor';
 
 
 const App = () => {
@@ -73,7 +73,7 @@ const App = () => {
 						<SplitCol>
 							<View activePanel={dataset.to}>
 								<Home id='home' go={go} fetchedUser={fetchedUser} dataset={dataset}/>
-								<TextEditor id="text_editor" go={go} dataset={dataset}/>
+								<GenerationPage id="text_editor" go={go} dataset={dataset}/>
 							</View>
 						</SplitCol>
 						{snackbar}

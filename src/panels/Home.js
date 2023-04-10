@@ -1,12 +1,26 @@
 import React, { useEffect, useState } from 'react';
 
-import { Panel, PanelHeader, Group, Cell, Div, Avatar, RichCell, IconButton, Spacing, Separator, Pagination, Spinner } from '@vkontakte/vkui';
+import { Panel, PanelHeader, Group, Cell, Div, Avatar, RichCell, IconButton, Spacing, Separator, Pagination, Spinner, Tabs, TabsItem, CellButton } from '@vkontakte/vkui';
 import { Icon24StarsOutline } from '@vkontakte/icons';
 import StrawberryBackend from '../api/SBBackend';
 
 
+export const FilterMode = {
+	ALL: {
+		id: 'all',
+		alias: 'Все сообщества',
+		icon: <Icon24StarsOutline/>
+	},
+	MANAGED: {
+		id: 'managed',
+		alias: 'В управлении',
+		icon: <Icon24StarsOutline/>
+	}
+}
+
 const GroupList = ({ go, dataset }) => {
 	const [groups, setGroups] = useState([]);
+	const [filterMode, setFilterMode] = useState(FilterMode.ALL);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [totalPages, setTotalPages] = useState(1);
 	const [isLoading, setIsLoading] = useState(false);
@@ -14,7 +28,7 @@ const GroupList = ({ go, dataset }) => {
 	const perPage = 7;
 
 	const onGenerate = (group) => {
-		StrawberryBackend.fetchGroupPosts(group.id, 5)
+		StrawberryBackend.fetchGroupPosts(group.id, 10)
 		.then((texts) => {
 			if (!texts) {
 				dataset.showSnackBar({text: `Ошибка во время извлечения тематики группы`, type: "danger"});
@@ -24,7 +38,8 @@ const GroupList = ({ go, dataset }) => {
 				dataset.showSnackBar({text: `Не хватает постов для построения тематики этой группы`, type: "danger"});
 				return
 			}
-			group.texts = texts
+			group.texts = texts;
+			group.mode = filterMode;
 			go({
 				to: "text_editor",
 				targetGroup: group,
@@ -36,24 +51,54 @@ const GroupList = ({ go, dataset }) => {
 		})
 	};
 
+	useEffect(() => {
+		setCurrentPage(1);
+		setGroups([]);
+	}, [filterMode])
+
     useEffect(() => {
 		setIsLoading(true);
-		StrawberryBackend.getGroupsManaged(currentPage, perPage)
+		let mode;
+		switch (filterMode) {
+			case FilterMode.MANAGED:
+				mode = "moder";
+				break;
+			default:
+				mode = "";
+				break;
+		}
+		StrawberryBackend.getGroups(currentPage, perPage, mode)
 		.then((resp) => {
 			setTotalPages(resp.count);
 			setGroups(resp.items);
 		}).finally(() => {
 			setIsLoading(false);
 		})
-	}, [currentPage]);
+	}, [filterMode, currentPage]);
 
 	return (
 		<Group>
+			<Tabs>
+				{
+					Object.values(FilterMode).map((fm) => {
+						return (
+							<TabsItem
+								//before={fm.icon}
+								selected={filterMode === fm}
+								onClick={() => setFilterMode(fm)}
+								id={fm.id}
+							>
+								{fm.alias}
+							</TabsItem>
+						)
+					})
+				}
+			</Tabs>
+			<Spacing size={24}>
+				<Separator />
+			</Spacing>
 			{
-				isLoading && <Div><Spinner/></Div>
-			}
-			{
-				!isLoading && groups && totalPages > 1 && (
+				groups && totalPages > 1 && (
 					<>
 						<Pagination
 							currentPage={currentPage}
@@ -70,17 +115,18 @@ const GroupList = ({ go, dataset }) => {
 				)
 			}
 			{
+				isLoading && <Div><Spinner/></Div>
+			}
+			{
 				!isLoading && groups && groups.map((group, idx) => {
 					return (
 						<RichCell
 							key={idx}
 							before={<Avatar src={group.photo_200}/>}
 							after={
-								<RichCell.Icon aria-hidden>
-									<IconButton onClick={() => onGenerate(group)}>
-										 <Icon24StarsOutline aria-label='Сгенерировать'/>
-									</IconButton>
-								</RichCell.Icon>
+								<CellButton after={<Icon24StarsOutline aria-label='Сгенерировать'/>} onClick={() => onGenerate(group)}>
+									Создать пост
+								</CellButton>
 							}
 							disabled
 						>
@@ -111,9 +157,8 @@ const GroupList = ({ go, dataset }) => {
 const Home = ({ id, go, fetchedUser, accessToken, dataset }) => {
 	return (
 		<Panel id={id}>
-			<Group>
-				<PanelHeader>Управление</PanelHeader>
 				{
+					/*
 					fetchedUser &&
 					<Group>
 						<Cell
@@ -123,9 +168,9 @@ const Home = ({ id, go, fetchedUser, accessToken, dataset }) => {
 							{`${fetchedUser.first_name} ${fetchedUser.last_name}`}
 						</Cell>
 					</Group>
+					*/
 				}
 				<GroupList go={go} accessToken={accessToken} dataset={dataset}/>
-			</Group>
 		</Panel>
 	);
 };

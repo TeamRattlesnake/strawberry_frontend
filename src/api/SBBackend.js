@@ -203,6 +203,26 @@ class StrawberryBackend {
         })
     }
 
+    static async generateText(contextData, hint) {
+        // генерация по теме hint
+        return API.makeRequest({
+            method: "POST",
+            url: "generate_text",
+            data: {
+                context_data: contextData,
+                hint
+            }
+        })
+        .then((resp) => {
+            if (StrawberryBackend.isOK(resp)) {
+                return StrawberryBackend.getData(resp);
+            }
+        })
+        .catch((error) => {
+            console.log(error);
+        })
+    }
+
     static async fetchGroupPosts(groupId, numPosts) {
         const accessToken = await StrawberryBackend.getVKToken();
         return bridge.send('VKWebAppCallAPIMethod', {
@@ -297,12 +317,12 @@ class StrawberryBackend {
     }
     */
 
-    static async getGroupsManaged(currentPage, perPage) {
+    static async getGroups(currentPage, perPage, mode) {
         const accessToken = await StrawberryBackend.getVKToken();
         let groupsData = await bridge.send('VKWebAppCallAPIMethod', {
             method: 'groups.get',
             params: {
-                filter: "moder",
+                filter: mode,
                 extended: 1,
                 v: '5.131',
                 access_token: accessToken,
