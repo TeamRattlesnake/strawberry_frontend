@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-import { Panel, PanelHeader, Group, Cell, Div, Avatar, RichCell, IconButton, Spacing, Separator, Pagination, Spinner, Tabs, TabsItem, CellButton } from '@vkontakte/vkui';
+import { Panel, PanelHeader, Group, Cell, Div, Avatar, RichCell, IconButton, Spacing, Separator, Pagination, Spinner, Tabs, TabsItem, CellButton, Search } from '@vkontakte/vkui';
 import { Icon24StarsOutline } from '@vkontakte/icons';
 import StrawberryBackend from '../api/SBBackend';
 
@@ -9,12 +9,12 @@ export const FilterMode = {
 	ALL: {
 		id: 'all',
 		alias: 'Все сообщества',
-		icon: <Icon24StarsOutline/>
+		//icon: <Icon24StarsOutline/>
 	},
 	MANAGED: {
 		id: 'managed',
 		alias: 'В управлении',
-		icon: <Icon24StarsOutline/>
+		//icon: <Icon24StarsOutline/>
 	}
 }
 
@@ -24,6 +24,7 @@ const GroupList = ({ go, dataset }) => {
 	const [currentPage, setCurrentPage] = useState(1);
 	const [totalPages, setTotalPages] = useState(1);
 	const [isLoading, setIsLoading] = useState(false);
+	const [searchQuery, setSearchQuery] = useState(null);
 
 	const perPage = 7;
 
@@ -58,23 +59,28 @@ const GroupList = ({ go, dataset }) => {
 
     useEffect(() => {
 		setIsLoading(true);
-		let mode;
-		switch (filterMode) {
-			case FilterMode.MANAGED:
-				mode = "moder";
-				break;
-			default:
-				mode = "";
-				break;
+		let promise;
+		if (Boolean(searchQuery)) {
+			promise = StrawberryBackend.searchGroups(searchQuery, currentPage, perPage)
+		} else {
+			let mode;
+			switch (filterMode) {
+				case FilterMode.MANAGED:
+					mode = "moder";
+					break;
+				default:
+					mode = "";
+					break;
+			}
+			promise = StrawberryBackend.getGroups(currentPage, perPage, mode)
 		}
-		StrawberryBackend.getGroups(currentPage, perPage, mode)
-		.then((resp) => {
+		promise.then((resp) => {
 			setTotalPages(resp.count);
 			setGroups(resp.items);
 		}).finally(() => {
 			setIsLoading(false);
 		})
-	}, [filterMode, currentPage]);
+	}, [searchQuery, filterMode, currentPage]);
 
 	return (
 		<Group>
@@ -100,14 +106,26 @@ const GroupList = ({ go, dataset }) => {
 			{
 				groups && totalPages > 1 && (
 					<>
-						<Pagination
-							currentPage={currentPage}
-							siblingCount={1}
-							boundaryCount={1}
-							totalPages={totalPages}
-							onChange={(page) => setCurrentPage(page)}
-							
-						/>
+						<div
+							style={{
+								display: "flex",
+								flexDirection: "row",
+								justifyContent: "space-between",
+								alignItems: "center",
+							}}
+						>
+							<Search
+								value={searchQuery}
+								onChange={(e) => setSearchQuery(e.target.value)}
+							/>
+							<Pagination
+								currentPage={currentPage}
+								siblingCount={1}
+								boundaryCount={1}
+								totalPages={totalPages}
+								onChange={(page) => setCurrentPage(page)}
+							/>
+						</div>
 						<Spacing size={24}>
 							<Separator />
 						</Spacing>

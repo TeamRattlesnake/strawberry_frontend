@@ -287,7 +287,7 @@ const GenerationPage = ({id, go, dataset}) => {
 
     const handleExecute = () => {
         setIsLoading(true);
-        service.execute(dataset.targetGroup.texts, text)
+        service.execute(dataset.targetGroup.id, dataset.targetGroup.texts, text)
         .then(({text_data, result_id}) => {
             setPostHistory((prev) => {
                 const post = {

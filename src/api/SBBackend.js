@@ -127,13 +127,14 @@ class StrawberryBackend {
         })
     }
 
-    static async appendText(contextData, hint) {
+    static async appendText(groupId, contextData, hint) {
         return API.makeRequest({
             method: "POST",
             url: "append_text",
             data: {
                 context_data: contextData,
-                hint
+                hint,
+                group_id: groupId
             }
         })
         .then((resp) => {
@@ -146,13 +147,14 @@ class StrawberryBackend {
         })
     }
 
-    static async rephraseText(contextData, hint) {
+    static async rephraseText(groupId, contextData, hint) {
         return API.makeRequest({
             method: "POST",
             url: "rephrase_text",
             data: {
                 context_data: contextData,
-                hint
+                hint,
+                group_id: groupId
             }
         })
         .then((resp) => {
@@ -165,13 +167,14 @@ class StrawberryBackend {
         })
     }
 
-    static async summarizeText(contextData, hint) {
+    static async summarizeText(groupId, contextData, hint) {
         return API.makeRequest({
             method: "POST",
             url: "summarize_text",
             data: {
                 context_data: contextData,
-                hint
+                hint,
+                group_id: groupId
             }
         })
         .then((resp) => {
@@ -184,13 +187,14 @@ class StrawberryBackend {
         })
     }
 
-    static async unmaskText(contextData, hint) {
+    static async unmaskText(groupId, contextData, hint) {
         return API.makeRequest({
             method: "POST",
             url: "unmask_text",
             data: {
                 context_data: contextData,
-                hint
+                hint,
+                group_id: groupId
             }
         })
         .then((resp) => {
@@ -203,14 +207,15 @@ class StrawberryBackend {
         })
     }
 
-    static async generateText(contextData, hint) {
+    static async generateText(groupId, contextData, hint) {
         // генерация по теме hint
         return API.makeRequest({
             method: "POST",
             url: "generate_text",
             data: {
                 context_data: contextData,
-                hint
+                hint,
+                group_id: groupId
             }
         })
         .then((resp) => {
@@ -317,6 +322,41 @@ class StrawberryBackend {
     }
     */
 
+    static async searchGroups(query, currentPage, perPage) {
+        const accessToken = await StrawberryBackend.getVKToken();
+        let groupsData = await bridge.send('VKWebAppCallAPIMethod', {
+            method: 'groups.search',
+            params: {
+                v: '5.131',
+                access_token: accessToken,
+                q: query,
+                offset: (currentPage-1)*perPage,
+                count: perPage,
+            }
+        })
+        .then((data) => {
+            if (data.response) {
+                return {
+                    "count": Math.ceil(data.response.count/perPage),
+                    "items": data.response.items,
+                }
+            } else {
+                return {
+                    "count": 0,
+                    "items": [],
+                }
+            }
+        })
+        .catch((error) => {
+            console.log(error);
+            return {
+                "count": 0,
+                "items": [],
+            }
+        })
+        return groupsData
+    }
+
     static async getGroups(currentPage, perPage, mode) {
         const accessToken = await StrawberryBackend.getVKToken();
         let groupsData = await bridge.send('VKWebAppCallAPIMethod', {
@@ -350,6 +390,7 @@ class StrawberryBackend {
                 }
             }
         );
+
         /*
         groupsData.items = await Promise.all(groupsData.items.map((item) => {
             if (!item) return item;
