@@ -1,4 +1,4 @@
-import { ActionSheet, ActionSheetDefaultIosCloseItem, ActionSheetItem, Avatar, Button, ButtonGroup, Card, CardGrid, CardScroll, Cell, CellButton, Div, FormItem, Group, Header, Link, Panel, PanelHeader, PanelHeaderBack, PanelHeaderContent, Platform, ScreenSpinner, Spinner, SplitCol, SplitLayout, Textarea, usePlatform } from "@vkontakte/vkui";
+import { ActionSheet, ActionSheetDefaultIosCloseItem, ActionSheetItem, Avatar, Button, ButtonGroup, Card, CardGrid, CardScroll, Cell, CellButton, CustomSelectOption, Div, FormItem, Group, Header, Link, Panel, PanelHeader, PanelHeaderBack, PanelHeaderContent, Platform, ScreenSpinner, Select, Spinner, SplitCol, SplitLayout, Textarea, usePlatform } from "@vkontakte/vkui";
 import React, {useEffect, useRef, useState} from "react";
 
 import { Icon12ClockOutline, Icon20Stars, Icon24ClockOutline, Icon56RecentOutline } from '@vkontakte/icons';
@@ -12,7 +12,19 @@ import { Icon24Shuffle } from '@vkontakte/icons';
 import StrawberryBackend from "../api/SBBackend";
 import { FilterMode } from "./Home";
 
+import moment from 'moment-timezone';
+moment.locale('ru');
+
+
 const Service = {
+    TEXTGEN_THEME: {
+        id: "textgen_theme",
+        alias: "Создать текст с нуля по заданной теме",
+        placeholder: "Ваша тема для текста (о чем он будет?)",
+        button_name: "Создать текст",
+        icon: <Icon24WriteOutline/>,
+        execute: StrawberryBackend.generateText,
+    },
     TEXTGEN: {
         id: "text_gen",
         alias: "Продолжить текст",
@@ -44,14 +56,6 @@ const Service = {
         button_name: "Заменить часть текста",
         icon: <Icon24Shuffle/>,
         execute: StrawberryBackend.unmaskText,
-    },
-    TEXTGEN_THEME: {
-        id: "textgen_theme",
-        alias: "Создать текст с нуля по заданной теме",
-        placeholder: "Ваша тема для текста (о чем он будет?)",
-        button_name: "Создать текст",
-        icon: <Icon24WriteOutline/>,
-        execute: StrawberryBackend.generateText,
     }
 };
 
@@ -133,31 +137,27 @@ const TextareaCustom = ({onSelect, onItemClick, ...props}) => {
     )
 }
 
-const ServiceList = ({activeService, onServiceClick, onClose, targetRef}) => {
-    const renderItem = (serviceKey, service) => {
+const ServiceList = ({activeServiceKey, onServiceClick}) => {
+    const renderItem = ({option, ...restProps}) => {
         return (
-            <ActionSheetItem
-                onChange={onServiceClick}
-                checked={activeService.id === service.id}
-                value={serviceKey}
-                autoClose
-                selectable
-                before={service.icon}
-            >
-                {service.alias}
-            </ActionSheetItem>
+            <CustomSelectOption
+                {...restProps}
+                key={option.value}
+                before={option.icon}
+            />
         )
     }
     return (
-        <ActionSheet
-            onClose={onClose}
-            iosCloseItem={<ActionSheetDefaultIosCloseItem />}
-            toggleRef={targetRef}
-        >
-            {
-                Object.entries(Service).map(([key, item]) => renderItem(key, item))
-            }
-        </ActionSheet>
+        <FormItem top="Тип взаимодействия с текстом">
+            <Select
+                value={activeServiceKey}
+                onChange={onServiceClick}
+                options={Object.entries(Service).map(([key, item]) => ({
+                    label: item.alias, value: key, ...item
+                }))}
+                renderOption={renderItem}
+            />
+        </FormItem>
     )
 }
 
@@ -180,7 +180,12 @@ onItemClick={
 }
 */
 
-const PostHistory = ({items}) => {
+const PostHistory = ({items, maxLen}) => {
+    maxLen = maxLen || 50;
+    useEffect(() => {
+        items = items.slice(items.length-maxLen);
+        localStorage.setItem("sb_post_history", JSON.stringify(items))
+    });
     return (
         <Group header={<Header>История запросов</Header>}>
             <Div>
@@ -194,8 +199,13 @@ const PostHistory = ({items}) => {
                                     if (!item.id) return;
                                     StrawberryBackend.sendFeedback(item.id, score)
                                     .then((ok) => {
-                                        if (ok) dataset.showSnackBar({text: `Спасибо за ваш отзыв!`, type: "success"});
-                                        else dataset.showSnackBar({text: `Не удалось отправить отзыв`, type: "danger"});
+                                        dataset.showSnackBar(
+                                            ok
+                                            ?
+                                            {text: `Спасибо за ваш отзыв!`, type: "success"}
+                                            :
+                                            {text: `Не удалось отправить отзыв`, type: "danger"}
+                                        );
                                     })
                                 }
                                 const onBadResult = () => onFeedback(-1);
@@ -212,6 +222,7 @@ const PostHistory = ({items}) => {
                                         }}
                                     >
                                         <div>
+                                            <Div>Создано: {moment.unix(item.datetime).tz("Europe/Moscow").format('YYYY-MM-DD HH:mm:ss')}</Div>
                                             <Div>
                                                 <Textarea
                                                     id={item.id}
@@ -261,16 +272,13 @@ const PostHistory = ({items}) => {
 
 const GenerationPage = ({id, go, dataset}) => {
     const group = dataset.targetGroup;
+    const [serviceKey, setServiceKey] = useState('TEXTGEN');
     const [service, setService] = useState(Service.TEXTGEN);
-    const [popout, setPopout] = useState(null);
     const [text, setText] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [editorPlaceholder, setEditorPlaceholder] = useState("Текст, который нужно продолжить");
-    const [postHistory, setPostHistory] = useState([]);
-    const [showPostHistory, setShowPostHistory] = useState(false);
+    const [postHistory, setPostHistory] = useState(JSON.parse(localStorage.getItem("sb_post_history")) || []);
     const platform = usePlatform();
-
-    const selectableTargetRef = useRef();
 
     useEffect(() => {
         setEditorPlaceholder(service.placeholder);
@@ -281,8 +289,8 @@ const GenerationPage = ({id, go, dataset}) => {
     }
 
     const handleServiceClick = (e) => {
+        setServiceKey(e.target.value);
         setService(Service[e.target.value]);
-        setPopout(null);
     }
 
     const handleExecute = () => {
@@ -292,9 +300,10 @@ const GenerationPage = ({id, go, dataset}) => {
             setPostHistory((prev) => {
                 const post = {
                     id: result_id,
-                    text: text_data
+                    text: text_data,
+                    datetime: moment().unix()
                 }
-                return [...prev, post]
+                return [post, ...prev]
             });
             setText(text_data);
         })
@@ -336,24 +345,14 @@ const GenerationPage = ({id, go, dataset}) => {
                     {group.name}
                 </PanelHeaderContent>
             </PanelHeader>
-            <SplitLayout popout={popout}>
+            <SplitLayout>
                 <SplitCol>
                     <Group>
                         <Div>
-                            <CellButton
-                                getRootRef={selectableTargetRef}
-                                onClick={() => setPopout(
-                                    <ServiceList
-                                        activeService={service}
-                                        onServiceClick={handleServiceClick}
-                                        onClose={() => setPopout(null)}
-                                        targetRef={selectableTargetRef}
-                                    />
-                                )}
-                                before={service.icon}
-                            >
-                                {service.alias}
-                            </CellButton>
+                            <ServiceList
+                                activeServiceKey={serviceKey}
+                                onServiceClick={handleServiceClick}    
+                            />
                         </Div>
                         <Div>
                             <Textarea
