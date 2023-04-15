@@ -272,17 +272,12 @@ const PostHistory = ({items, maxLen}) => {
 
 const GenerationPage = ({id, go, dataset}) => {
     const group = dataset.targetGroup;
-    const [serviceKey, setServiceKey] = useState('TEXTGEN');
-    const [service, setService] = useState(Service.TEXTGEN);
+    const [serviceKeyDefault, serviceItemDefault] = Object.entries(Service)[0]
+    const [serviceKey, setServiceKey] = useState(serviceKeyDefault);
+    const [service, setService] = useState(serviceItemDefault);
     const [text, setText] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const [editorPlaceholder, setEditorPlaceholder] = useState("Текст, который нужно продолжить");
     const [postHistory, setPostHistory] = useState(JSON.parse(localStorage.getItem("sb_post_history")) || []);
-    const platform = usePlatform();
-
-    useEffect(() => {
-        setEditorPlaceholder(service.placeholder);
-    }, [service])
     
     const handleTextChange = (e) => {
         setText(e.target.value);
@@ -358,7 +353,7 @@ const GenerationPage = ({id, go, dataset}) => {
                             <Textarea
                                 rows={7}
                                 value={text}
-                                placeholder={editorPlaceholder}
+                                placeholder={service.placeholder}
                                 onChange={handleTextChange}
                             />
                         </Div>
