@@ -4,7 +4,7 @@ import { View, AdaptivityProvider, AppRoot, ConfigProvider, SplitLayout, SplitCo
 import '@vkontakte/vkui/dist/vkui.css';
 
 import Home from './panels/Home';
-import GenerationPage from './panels/GenerationPage';
+import GenerationPage from './panels/Generation';
 import { Icon28CancelCircleOutline, Icon28CheckCircleOutline, Icon28InfoCircleOutline } from '@vkontakte/icons';
 
 

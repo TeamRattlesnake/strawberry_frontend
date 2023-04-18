@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 
-import { Panel, PanelHeader, Group, Cell, Div, Avatar, RichCell, IconButton, Spacing, Separator, Pagination, Spinner, Tabs, TabsItem, CellButton, Search } from '@vkontakte/vkui';
+import { Panel, Group, Div, Avatar, RichCell, Spacing, Separator, Pagination, Spinner, Tabs, TabsItem, CellButton, Search } from '@vkontakte/vkui';
 import { Icon24StarsOutline } from '@vkontakte/icons';
-import StrawberryBackend from '../api/SBBackend';
+import StrawberryBackend from '../../api/SBBackend';
 
 
 export const FilterMode = {
@@ -103,35 +103,32 @@ const GroupList = ({ go, dataset }) => {
 			<Spacing size={24}>
 				<Separator />
 			</Spacing>
-			{
-				groups && totalPages > 1 && (
-					<>
-						<div
-							style={{
-								display: "flex",
-								flexDirection: "row",
-								justifyContent: "space-between",
-								alignItems: "center",
-							}}
-						>
-							<Search
-								value={searchQuery}
-								onChange={(e) => setSearchQuery(e.target.value)}
-							/>
-							<Pagination
-								currentPage={currentPage}
-								siblingCount={1}
-								boundaryCount={1}
-								totalPages={totalPages}
-								onChange={(page) => setCurrentPage(page)}
-							/>
-						</div>
-						<Spacing size={24}>
-							<Separator />
-						</Spacing>
-					</>
-				)
-			}
+			<div
+				style={{
+					display: "flex",
+					flexDirection: "row",
+					justifyContent: "space-between",
+					alignItems: "center",
+				}}
+			>
+				<Search
+					value={searchQuery}
+					onChange={(e) => setSearchQuery(e.target.value)}
+				/>
+				{
+					groups && totalPages > 1 &&
+					<Pagination
+						currentPage={currentPage}
+						siblingCount={1}
+						boundaryCount={1}
+						totalPages={totalPages}
+						onChange={(page) => setCurrentPage(page)}
+					/>
+				}
+			</div>
+			<Spacing size={24}>
+				<Separator />
+			</Spacing>
 			{
 				isLoading && <Div><Spinner/></Div>
 			}
@@ -142,7 +139,11 @@ const GroupList = ({ go, dataset }) => {
 							key={idx}
 							before={<Avatar src={group.photo_200}/>}
 							after={
-								<CellButton after={<Icon24StarsOutline aria-label='Сгенерировать'/>} onClick={() => onGenerate(group)}>
+								<CellButton
+									after={<Icon24StarsOutline
+									aria-label='Сгенерировать'/>}
+									onClick={() => onGenerate(group)}
+								>
 									Создать пост
 								</CellButton>
 							}
