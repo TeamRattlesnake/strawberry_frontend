@@ -11,12 +11,11 @@ import StrawberryBackend from "../../api/SBBackend";
 import { FilterMode } from "../Home";
 
 import moment from 'moment-timezone';
+moment.locale('ru');
 
 import Hint from "./Hint";
 import PostHistory from "./PostHistory";
 import ServiceList from "./ServiceList";
-
-moment.locale('ru');
 
 
 export const Service = {

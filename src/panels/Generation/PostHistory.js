@@ -2,6 +2,9 @@ import { Icon56RecentOutline } from "@vkontakte/icons";
 import { Button, ButtonGroup, Card, CardScroll, Div, Group, Header, Textarea } from "@vkontakte/vkui";
 import { useEffect } from "react";
 
+import moment from 'moment-timezone';
+moment.locale('ru');
+
 
 const PostHistory = ({items, maxLen, onFeedback}) => {
     maxLen = maxLen || 50;
