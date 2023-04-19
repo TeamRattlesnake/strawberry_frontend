@@ -1,4 +1,4 @@
-import {Avatar, Button, Div, Group, Panel, PanelHeader, PanelHeaderBack, PanelHeaderContent, SplitCol, SplitLayout, Textarea } from "@vkontakte/vkui";
+import {Avatar, Button, Div, FormItem, Group, Panel, PanelHeader, PanelHeaderBack, PanelHeaderContent, SplitCol, SplitLayout, Textarea } from "@vkontakte/vkui";
 import React, {useEffect, useState} from "react";
 
 import { Icon24WriteOutline } from '@vkontakte/icons';
@@ -7,11 +7,11 @@ import { Icon24MagicWandOutline } from '@vkontakte/icons';
 import { Icon24SubtitlesOutline } from '@vkontakte/icons';
 import { Icon24Shuffle } from '@vkontakte/icons';
 
-import StrawberryBackend from "../../api/SBBackend";
-import { FilterMode } from "../Home";
-
 import moment from 'moment-timezone';
 moment.locale('ru');
+
+import StrawberryBackend from "../../api/SBBackend";
+import { FilterMode } from "../Home";
 
 import Hint from "./Hint";
 import PostHistory from "./PostHistory";
@@ -22,59 +22,58 @@ export const Service = {
     TEXTGEN_THEME: {
         id: "textgen_theme",
         alias: "Создать текст с нуля по заданной теме",
-        placeholder: "Ваша тема для текста (о чем он будет?)",
+        textarea_top: "Тема (краткое описание) для текста, который нужно создать:",
+        //placeholder: "Ваша тема для текста (о чем он будет?)",
         button_name: "Создать текст",
         icon: <Icon24WriteOutline/>,
         execute: StrawberryBackend.generateText,
-        hint: "Напишите ниже о чем будет ваш текст (его тему)"
+        hint: "В этом режиме можно с использованием вашего краткого описания текста (темы) создать текст побольше!"
     },
     TEXTGEN: {
         id: "text_gen",
         alias: "Продолжить текст",
-        placeholder: "Текст, который вы хотите продолжить",
+        textarea_top: "Текст, который нужно продолжить:",
+        //placeholder: "Текст, который вы хотите продолжить",
         button_name: "Продолжить текст",
         icon: <Icon24ArrowRightCircleOutline/>,
         execute: StrawberryBackend.appendText,
-        hint: "Напишите ниже текст, который вы хотите продолжить"
+        hint: "В этом режиме можно продолжить введенный вами текст."
     },
     REPHRASE: {
         id: "rephrase",
         alias: "Перефразировать текст",
-        placeholder: "Текст, который вы хотите перефразировать",
+        textarea_top: "Текст, который нужно перефразировать:",
+        //placeholder: "Текст, который вы хотите перефразировать",
         button_name: "Перефразировать текст",
         icon: <Icon24MagicWandOutline/>,
         execute: StrawberryBackend.rephraseText,
-        hint: "Напишите ниже текст, который вы хотите перефразировать"
+        hint: "В этом режиме можно перефразировать текст, то есть немного поменять текст, сохранив при этом смысл!"
     },
     SUMMARIZE: {
         id: "summarize",
         alias: "Резюмировать текст",
-        placeholder: "Большой текст, который нужно резюмировать (сократить)",
+        textarea_top: "Текст, который нужно сократить (резюмировать):",
+        //placeholder: "Большой текст, который нужно резюмировать (сократить)",
         button_name: "Резюмировать текст",
         icon: <Icon24SubtitlesOutline/>,
         execute: StrawberryBackend.summarizeText,
-        hint: "Напишите ниже большой текст, который нужно резюмировать (сократить)"
+        hint: "В этом режиме можно сократить текст, оставив только самое главное, то есть сохранить основной смысл текста!"
     },
     BERT: {
         id: "bert",
         alias: "Заменить часть текста",
-        placeholder: "Текст, в котором нужно заменить его часть/части (обязательно с маской <MASK> в местах замены)",
+        textarea_top: "Текст, в котором нужно заменить его часть:",
+        //placeholder: "Текст, в котором нужно заменить его часть/части (обязательно с маской <MASK> в местах замены)",
         button_name: "Заменить часть текста",
         icon: <Icon24Shuffle/>,
         execute: StrawberryBackend.unmaskText,
-        hint: "Напишите ниже текст, в котором нужно заменить его часть/части (обязательно с маской <MASK> в местах замены)"
+        hint: "В этом режиме можно заменить конкретные части текста (слово или слова) на максимально подходящие по смыслу! Чтобы указать место, где нужно выполнить замену, напишите \"<MASK>\"."
     }
 };
 
 const serviceStorageDefault = {
     showHint: true,
 }
-
-const saveServiceStorage = (serviceKey, data) => {
-    const oldData = localStorage.getItem("sb_service_data")
-    localStorage.setItem("sb_service_data", {...oldData, serviceKey: {...oldData?.[serviceKey], ...data}})
-}
-
 
 const GenerationPage = ({id, go, dataset}) => {
     const group = dataset.targetGroup;
@@ -85,7 +84,22 @@ const GenerationPage = ({id, go, dataset}) => {
     const [isLoading, setIsLoading] = useState(false);
     const [postHistory, setPostHistory] = useState(JSON.parse(localStorage.getItem("sb_post_history")) || []);
 
-    let serviceData = localStorage.getItem("sb_service_data")?.[serviceKey] || serviceStorageDefault;
+    const getServiceStorage = (serviceKey) => {
+        const data = JSON.parse(localStorage.getItem("sb_service_data"));
+        const serviceData = data?.[serviceKey] ? {...serviceStorageDefault, ...data?.[serviceKey]} : serviceStorageDefault;
+        return serviceData;
+    }
+
+    const [serviceData, setServiceData] = useState(getServiceStorage(serviceKey));
+
+    const saveServiceStorage = (serviceKey, data) => {
+        const oldData = JSON.parse(localStorage.getItem("sb_service_data"));
+        const newServiceData = {...oldData?.[serviceKey], ...data};
+        const newData = {...oldData, [serviceKey]: newServiceData};
+        localStorage.setItem("sb_service_data", JSON.stringify(newData));
+        console.log('newServiceData', newServiceData);
+        setServiceData((prev) => ({...prev, ...newServiceData}));
+    }
 
     const handleFeedback = (id, score) => {
         if (!id) return;
@@ -108,6 +122,7 @@ const GenerationPage = ({id, go, dataset}) => {
     const handleServiceClick = (e) => {
         setServiceKey(e.target.value);
         setService(Service[e.target.value]);
+        setServiceData(getServiceStorage(e.target.value));
     }
 
     const handleExecute = () => {
@@ -163,10 +178,6 @@ const GenerationPage = ({id, go, dataset}) => {
             </PanelHeader>
             <SplitLayout>
                 <SplitCol>
-                    { service.hint && serviceData.showHint && <Hint text={service.hint} onClose={() => {
-                        serviceData.showHint = false;
-                        saveServiceStorage(serviceKey, {showHint: false});
-                    }}/> }
                     <Group>
                         <Div>
                             <ServiceList
@@ -174,13 +185,24 @@ const GenerationPage = ({id, go, dataset}) => {
                                 onServiceClick={handleServiceClick}    
                             />
                         </Div>
+                        {
+                            console.log('sd', serviceData)
+                        }
+                        {
+                            serviceData.showHint &&
+                            <Hint text={service.hint} onClose={() => {
+                                saveServiceStorage(serviceKey, {showHint: false});
+                            }}/>
+                        }
                         <Div>
-                            <Textarea
-                                rows={7}
-                                value={text}
-                                placeholder={service.placeholder}
-                                onChange={handleTextChange}
-                            />
+                            <FormItem top={service.textarea_top}>
+                                <Textarea
+                                    rows={7}
+                                    value={text}
+                                    placeholder={service.placeholder}
+                                    onChange={handleTextChange}
+                                />
+                            </FormItem>
                         </Div>
                         <Div>
                             {
