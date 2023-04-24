@@ -1,4 +1,5 @@
 import { Banner, Image } from "@vkontakte/vkui"
+import question from "../../media/question.gif"
 
 
 const Hint = ({text, onClose}) => {
@@ -7,7 +8,7 @@ const Hint = ({text, onClose}) => {
             before={
                 <Image
                     size={96}
-                    src="https://media.tenor.com/VRzV-ieR0uwAAAAi/strawberry-fruit.gif"
+                    src={question}
                 />
             }
             header={text}

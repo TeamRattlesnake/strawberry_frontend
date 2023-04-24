@@ -7,9 +7,6 @@ import { Icon24MagicWandOutline } from '@vkontakte/icons';
 import { Icon24SubtitlesOutline } from '@vkontakte/icons';
 import { Icon24Shuffle } from '@vkontakte/icons';
 
-import moment from 'moment-timezone';
-moment.locale('ru');
-
 import StrawberryBackend from "../../api/SBBackend";
 import { FilterMode } from "../Home";
 
@@ -111,7 +108,7 @@ const PublishBox = ({groupId, text, showSnackBar}) => {
                     defaultChecked={usePublishDate}
                     onChange={(e) => setUsePublishDate(e.target.checked)}
                 >
-                    Отложенная запись
+                    Отложенная публикация
                 </Checkbox>
                 {
                     usePublishDate &&
@@ -152,7 +149,6 @@ const GenerationPage = ({id, go, dataset}) => {
     const [service, setService] = useState(serviceItemDefault);
     const [text, setText] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const [postHistory, setPostHistory] = useState(JSON.parse(localStorage.getItem("sb_post_history")) || []);
 
     const getServiceStorage = (serviceKey) => {
         const data = JSON.parse(localStorage.getItem("sb_service_data"));
@@ -199,14 +195,6 @@ const GenerationPage = ({id, go, dataset}) => {
         setIsLoading(true);
         service.execute(dataset.targetGroup.id, dataset.targetGroup.texts, text)
         .then(({text_data, result_id}) => {
-            setPostHistory((prev) => {
-                const post = {
-                    id: result_id,
-                    text: text_data,
-                    datetime: moment().unix()
-                }
-                return [post, ...prev]
-            });
             setText(text_data);
             Math.random() <= 0.3
             &&
@@ -289,7 +277,7 @@ const GenerationPage = ({id, go, dataset}) => {
                             )
                         }
                     </Group>
-                    <PostHistory items={postHistory} onFeedback={handleFeedback}/>
+                    <PostHistory groupId={group.id} onFeedback={handleFeedback}/>
                 </SplitCol>
             </SplitLayout>
         </Panel>

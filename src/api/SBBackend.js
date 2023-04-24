@@ -39,76 +39,6 @@ class StrawberryBackend {
         })
     }
 
-    /*
-    static async getGroups(offset, count) {
-        const defaultResp = {"count": 0, "groups": []};
-        return API.makeRequest({
-            method: "GET",
-            url: "get_groups",
-            params: {
-                offset,
-                count
-            }
-        })
-        .then((resp) => {
-            if (StrawberryBackend.isOK(resp)) {
-                let data = StrawberryBackend.getData(resp) || []
-                data = {
-                    count: resp.data.count || 0,
-                    groups: data.map((group) => {
-                        return {id: group.group_id, status: group.group_status}
-                    })
-                }
-                return data
-            }
-            return defaultResp
-        })
-        .catch((error) => {
-            console.log(error);
-            return defaultResp
-        })
-    }
-
-    static async getGroup(groupId) {
-        return API.makeRequest({
-            method: "GET",
-            url: "get_groups",
-            params: {
-                group_id: groupId,
-            }
-        })
-        .then((resp) => {
-            if (StrawberryBackend.isOK(resp)) {
-                let data = StrawberryBackend.getData(resp); // returning groups (array)
-                return (data && data.length > 0) ? {id: data[0].group_id, status: data[0].group_status} : {}
-            }
-            return {}
-        })
-        .catch((error) => {
-            console.log(error);
-            return {}
-        })
-    }
-
-    static async addGroup(groupId, texts) {
-        return API.makeRequest({
-            method: "POST",
-            url: "add_group",
-            data: {
-                group_id: groupId,
-                texts
-            }
-        })
-        .then((resp) => {
-            return StrawberryBackend.isOK(resp)
-        })
-        .catch((error) => {
-            console.log(error);
-            return false
-        })
-    }
-    */
-
     static async sendFeedback(resultId, score) {
         return API.makeRequest({
             method: "POST",
@@ -270,59 +200,6 @@ class StrawberryBackend {
         });
     }
 
-    /*
-    static async getGroupsConnected(currentPage, perPage) {
-        const accessToken = await StrawberryBackend.getVKToken();
-        let groupsData = await StrawberryBackend.getGroups((currentPage-1)*perPage, perPage).then((resp) => {
-            if (!resp?.groups || (resp?.groups?.length <= 0)) {
-                return {"count": 0, "items": []}
-            }
-            return bridge.send('VKWebAppCallAPIMethod', {
-                method: 'groups.getById',
-                params: {
-                    v: '5.131',
-                    group_ids: resp.groups.map(({id}) => id).join(','),
-                    access_token: accessToken
-                }
-            })
-            .then((vkResp) => {
-                if (vkResp.response) {
-                    const groups = resp.groups.map((group, idx) => {
-                        return {...group, ...vkResp.response[idx]}
-                    });
-                    return {"count": resp.count, "items": groups}
-                } else {
-                    return {"count": 0, "items": []}
-                }
-            })
-            .catch((error) => {
-                console.log(error);
-                return {"count": 0, "items": []}
-            })
-        });
-        groupsData.items = await Promise.all(groupsData.items.map((group) => {
-            return StrawberryBackend.getGroup(group.id)
-            .then((resp) => {
-                group.ready = resp.status === 0
-                return group
-            })
-            .catch((error) => {
-                console.log(error);
-                group.ready = false;
-                return group
-            })
-        }));
-        return groupsData;
-    }
-
-    static async getGroupsStatuses(groupIds) {
-        return Promise.all(groupIds.map((groupId) => StrawberryBackend.getGroup(groupId)))
-        .then((resps) => {
-            return resps.map((resp) => resp.status === 0)
-        })
-    }
-    */
-
     static async searchGroups(query, currentPage, perPage) {
         const accessToken = await StrawberryBackend.getVKToken();
         let groupsData = await bridge.send('VKWebAppCallAPIMethod', {
@@ -360,7 +237,7 @@ class StrawberryBackend {
 
     static async getGroups(currentPage, perPage, mode) {
         const accessToken = await StrawberryBackend.getVKToken();
-        let groupsData = await bridge.send('VKWebAppCallAPIMethod', {
+        return await bridge.send('VKWebAppCallAPIMethod', {
             method: 'groups.get',
             params: {
                 filter: mode,
@@ -391,23 +268,30 @@ class StrawberryBackend {
                 }
             }
         );
+    }
 
-        /*
-        groupsData.items = await Promise.all(groupsData.items.map((item) => {
-            if (!item) return item;
-            return StrawberryBackend.getGroup(item.id)
-            .then((group) => {
-                console.log('item', item, 'group', group);
-                item.connected = Boolean(group && Object.keys(group).length > 0 && group.status !== null && group.status !== undefined && group.status != 2);
-                return item
-            })
-            .catch((_) => {
-                item.connected = false;
-                return item
-            })
-        }));
-        */
-        return groupsData;
+    static async getUserResults(groupId, count, offset) {
+        const defaultResp = {count: 0, items: []};
+        return API.makeRequest({
+            method: "GET",
+            url: "get_user_results",
+            params: {
+                group_id: groupId,
+                limit: count,
+                offset,
+            }
+        })
+        .then((resp) => {
+            if (StrawberryBackend.isOK(resp)) {
+                return {count: response.data?.count, items: StrawberryBackend.getData(resp)};
+            } else {
+                return defaultResp;
+            }
+        })
+        .catch((error) => {
+            console.log(error);
+            return defaultResp;
+        })
     }
 }
 

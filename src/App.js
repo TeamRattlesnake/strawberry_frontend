@@ -7,6 +7,10 @@ import Home from './panels/Home';
 import GenerationPage from './panels/Generation';
 import { Icon28CancelCircleOutline, Icon28CheckCircleOutline, Icon28InfoCircleOutline } from '@vkontakte/icons';
 
+import ico_crying from "./media/crying.gif";
+import ico_normal from "./media/normal.gif";
+import ico_ok from "./media/ok.gif";
+
 
 const App = () => {
 	const [snackbar, setSnackbar] = useState(null);
@@ -17,15 +21,15 @@ const App = () => {
 			switch (type) {
 				case "success":
 					icon = <Icon28CheckCircleOutline fill="var(--vkui--color_icon_positive)" />
-					img_src = "https://media.tenor.com/NGh3aVoXP2kAAAAj/strawberry.gif";
+					img_src = ico_ok;
 					break;
 				case "danger":
 					icon = <Icon28CancelCircleOutline fill="var(--vkui--color_icon_negative)" />
-					img_src = "https://media.tenor.com/azaqzpGX2-kAAAAi/strawberry-fruit.gif";
+					img_src = ico_crying;
 					break;
 				default:
 					icon = <Icon28InfoCircleOutline/>
-					img_src = "https://media.tenor.com/1fokKcxMy1EAAAAj/strawberry-fruit.gif";
+					img_src = ico_normal;
 					break;
 			}
 			setSnackbar(
