@@ -29,7 +29,7 @@ const GroupList = ({ go, dataset }) => {
 	const perPage = 7;
 
 	const onGenerate = (group) => {
-		StrawberryBackend.fetchGroupPosts(group.id, 10)
+		StrawberryBackend.fetchGroupPosts(group.id, 20)
 		.then((texts) => {
 			if (!texts) {
 				dataset.showSnackBar({text: `Ошибка во время извлечения тематики группы`, type: "danger"});
@@ -173,23 +173,10 @@ const GroupList = ({ go, dataset }) => {
 	)
 }
 
-const Home = ({ id, go, fetchedUser, accessToken, dataset }) => {
+const Home = ({ id, go, accessToken, dataset }) => {
 	return (
 		<Panel id={id}>
-				{
-					/*
-					fetchedUser &&
-					<Group>
-						<Cell
-							before={fetchedUser.photo_200 ? <Avatar src={fetchedUser.photo_200}/> : null}
-							subtitle={fetchedUser.city && fetchedUser.city.title ? fetchedUser.city.title : ''}
-						>
-							{`${fetchedUser.first_name} ${fetchedUser.last_name}`}
-						</Cell>
-					</Group>
-					*/
-				}
-				<GroupList go={go} accessToken={accessToken} dataset={dataset}/>
+			<GroupList go={go} accessToken={accessToken} dataset={dataset}/>
 		</Panel>
 	);
 };

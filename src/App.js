@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import bridge from '@vkontakte/vk-bridge';
+import React, { useState } from 'react';
 import { View, AdaptivityProvider, AppRoot, ConfigProvider, SplitLayout, SplitCol, Snackbar } from '@vkontakte/vkui';
 import '@vkontakte/vkui/dist/vkui.css';
 
@@ -54,16 +53,6 @@ const App = () => {
 			);
 		}
 	});
-	const [fetchedUser, setUser] = useState(null);
-
-	useEffect(() => {
-		bridge.send('VKWebAppGetUserInfo')
-		.then((data) => {
-			setUser(data);
-		}).catch((error) => {
-			console.log(error);
-		})
-	}, []);
 
 	const go = data => {setDataset((prev) => {
 		return {...prev, ...data};
@@ -76,8 +65,16 @@ const App = () => {
 					<SplitLayout>
 						<SplitCol>
 							<View activePanel={dataset.to}>
-								<Home id='home' go={go} fetchedUser={fetchedUser} dataset={dataset}/>
-								<GenerationPage id="text_editor" go={go} dataset={dataset}/>
+								<Home
+									id='home'
+									go={go}
+									dataset={dataset}
+								/>
+								<GenerationPage
+									id="text_editor"
+									go={go}
+									dataset={dataset}
+								/>
 							</View>
 						</SplitCol>
 						{snackbar}

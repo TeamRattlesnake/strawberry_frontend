@@ -13,7 +13,7 @@ const ServiceList = ({activeServiceKey, onServiceClick}) => {
         )
     }
     return (
-        <FormItem top="Тип взаимодействия с текстом">
+        <FormItem top="Режим редактирования">
             <Select
                 value={activeServiceKey}
                 onChange={onServiceClick}
