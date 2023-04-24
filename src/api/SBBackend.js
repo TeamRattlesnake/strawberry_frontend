@@ -253,11 +253,12 @@ class StrawberryBackend {
         })
     }
 
-    static async publishPost(groupId, text) {
+    static async publishPost(groupId, text, options) {
         // опубликовать в группе
         return bridge.send('VKWebAppShowWallPostBox', {
             owner_id: -groupId,
-            message: text
+            message: text,
+            ...options
         })
         .then((data) => {
             return data.post_id ? 0 : 1;

@@ -6,10 +6,19 @@ import moment from 'moment-timezone';
 moment.locale('ru');
 
 
-const PostHistory = ({items, maxLen, onFeedback}) => {
+const PostHistory = ({groupId, items, maxLen, onFeedback}) => {
     maxLen = maxLen || 50;
     useEffect(() => {
         items = items.slice(items.length-maxLen);
+        items.map((item) => {
+            bridge.send('VKWebAppStorageSet', {
+                key: `group_${groupId}_post_${item.id}`,
+                value: JSON.stringify(item)
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+        })
         localStorage.setItem("sb_post_history", JSON.stringify(items))
     });
     return (

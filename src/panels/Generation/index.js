@@ -1,4 +1,4 @@
-import {Avatar, Button, Div, FormItem, Group, Panel, PanelHeader, PanelHeaderBack, PanelHeaderContent, SplitCol, SplitLayout, Textarea } from "@vkontakte/vkui";
+import {Avatar, Button, Checkbox, DateInput, Div, FormItem, Group, Panel, PanelHeader, PanelHeaderBack, PanelHeaderContent, Separator, Spacing, SplitCol, SplitLayout, Textarea } from "@vkontakte/vkui";
 import React, {useEffect, useState} from "react";
 
 import { Icon24WriteOutline } from '@vkontakte/icons';
@@ -27,7 +27,7 @@ export const Service = {
         button_name: "Создать текст",
         icon: <Icon24WriteOutline/>,
         execute: StrawberryBackend.generateText,
-        hint: "В этом режиме можно с использованием вашего краткого описания текста (темы) создать текст побольше!"
+        hint: "В этом режиме можно с использованием вашего краткого описания текста (темы) создать текст побольше! Попробуйте ввести тему текста и создать что-то новое."
     },
     TEXTGEN: {
         id: "text_gen",
@@ -37,7 +37,7 @@ export const Service = {
         button_name: "Продолжить текст",
         icon: <Icon24ArrowRightCircleOutline/>,
         execute: StrawberryBackend.appendText,
-        hint: "В этом режиме можно продолжить введенный вами текст."
+        hint: "В этом режиме можно продолжить введенный вами текст. Введите начало текста, который вы хотите написать, и мы его продолжим!"
     },
     REPHRASE: {
         id: "rephrase",
@@ -47,7 +47,7 @@ export const Service = {
         button_name: "Перефразировать текст",
         icon: <Icon24MagicWandOutline/>,
         execute: StrawberryBackend.rephraseText,
-        hint: "В этом режиме можно перефразировать текст, то есть немного поменять текст, сохранив при этом смысл!"
+        hint: "В этом режиме можно перефразировать текст. Введите текст, и мы его перепишем, сохранив при этом основной смысл!"
     },
     SUMMARIZE: {
         id: "summarize",
@@ -57,7 +57,7 @@ export const Service = {
         button_name: "Резюмировать текст",
         icon: <Icon24SubtitlesOutline/>,
         execute: StrawberryBackend.summarizeText,
-        hint: "В этом режиме можно сократить текст, оставив только самое главное, то есть сохранить основной смысл текста!"
+        hint: "В этом режиме можно сократить текст, оставив только самое главное, то есть сохранить основной смысл текста! Введите объемный текст, который нужно сократить, об остальном мы позаботимся сами."
     },
     BERT: {
         id: "bert",
@@ -67,12 +67,80 @@ export const Service = {
         button_name: "Заменить часть текста",
         icon: <Icon24Shuffle/>,
         execute: StrawberryBackend.unmaskText,
-        hint: "В этом режиме можно заменить конкретные части текста (слово или слова) на максимально подходящие по смыслу! Чтобы указать место, где нужно выполнить замену, напишите \"<MASK>\"."
+        hint: "В этом режиме можно заменить конкретные части текста (слово или слова) на максимально подходящие по смыслу! Чтобы указать место, где нужно выполнить замену, напишите \"<MASK>\". Мы постараемся заменить это ключевое слово на подходящее по смыслу."
     }
 };
 
 const serviceStorageDefault = {
     showHint: true,
+}
+
+
+const PublishBox = ({groupId, text, showSnackBar}) => {
+    const [fromGroup, setFromGroup] = useState(true);
+    const [usePublishDate, setUsePublishDate] = useState(false);
+    const [publishDate, setPublishDate] = useState(() => new Date());
+    const handlePublish = () => {
+        StrawberryBackend.publishPost(groupId, text, {
+            from_group: fromGroup,
+            publish_date: usePublishDate && Math.floor(publishDate.getTime() / 1000),
+        })
+        .then((status) => {
+            switch (status) {
+                case 0:
+                    showSnackBar({
+                        text: usePublishDate ?
+                        "Ура, в скором времени запись будет опубликована!"
+                        :
+                        "Ура, запись успешно опубликована!",
+                        type: "success"});
+                    break;
+                case 1:
+                    showSnackBar({text: "Передумали?", type: "danger"});
+                    break;
+                default:
+                    showSnackBar({text: "Ошибка при публикации записи", type: "danger"});
+                    break;
+            }
+        })
+    }
+    return (
+        <Group mode="plain">
+            <Div>
+                <Checkbox
+                    defaultChecked={usePublishDate}
+                    onChange={(e) => setUsePublishDate(e.target.checked)}
+                >
+                    Отложенная запись
+                </Checkbox>
+                {
+                    usePublishDate &&
+                    <DateInput
+                        value={publishDate}
+                        onChange={setPublishDate}
+                        enableTime
+                        disablePast
+                        closeOnChange
+                    />
+                }
+                <Checkbox
+                    defaultChecked={fromGroup}
+                    onChange={(e) => setFromGroup(e.target.checked)}
+                >
+                    От имени сообщества
+                </Checkbox>
+            </Div>
+            <Div>
+                <Button
+                    stretched
+                    appearance="positive"
+                    onClick={handlePublish}
+                >
+                    Опубликовать
+                </Button>
+            </Div>
+        </Group>
+    )
 }
 
 const GenerationPage = ({id, go, dataset}) => {
@@ -138,29 +206,21 @@ const GenerationPage = ({id, go, dataset}) => {
                 return [post, ...prev]
             });
             setText(text_data);
+            Math.random() <= 0.3
+            &&
+            setTimeout(
+                () => dataset.showSnackBar({
+                    text: 'Мы будем признательны, если вы оставите фидбэк. Для этого оцените созданный текст в истории запросов.',
+                    type: 'info'
+                }),
+                3000
+            );
         })
         .catch((error) => {
             console.log(error);
-            dataset.showSnackBar({text: "Неизвестная ошибка", type: "danger"});
+            dataset.showSnackBar({text: "Неизвестная ошибка :(", type: "danger"});
         })
         .finally(() => setIsLoading(false));
-    }
-
-    const handlePublish = () => {
-        StrawberryBackend.publishPost(dataset.targetGroup.id, text)
-        .then((status) => {
-            switch (status) {
-                case 0:
-                    dataset.showSnackBar({text: "Ура, запись успешно опубликована!", type: "success"});
-                    break;
-                case 1:
-                    dataset.showSnackBar({text: "Передумали?", type: "danger"});
-                    break;
-                default:
-                    dataset.showSnackBar({text: "Ошибка при публикации записи", type: "danger"});
-                    break;
-            }
-        })
     }
 
     return (
@@ -190,9 +250,11 @@ const GenerationPage = ({id, go, dataset}) => {
                         }
                         {
                             serviceData.showHint &&
-                            <Hint text={service.hint} onClose={() => {
-                                saveServiceStorage(serviceKey, {showHint: false});
-                            }}/>
+                            <Div>
+                                <Hint text={service.hint} onClose={() => {
+                                    saveServiceStorage(serviceKey, {showHint: false});
+                                }}/>
+                            </Div>
                         }
                         <Div>
                             <FormItem top={service.textarea_top}>
@@ -217,15 +279,12 @@ const GenerationPage = ({id, go, dataset}) => {
                         </Div>
                         {
                             dataset.targetGroup.mode === FilterMode.MANAGED &&
-                            <Div>
-                                <Button
-                                    stretched
-                                    appearance="positive"
-                                    onClick={handlePublish}
-                                >
-                                    Опубликовать
-                                </Button>
-                            </Div>
+                            (
+                                <>
+                                    <Separator/>
+                                    <PublishBox groupId={group.id} text={text} showSnackBar={dataset.showSnackBar}/>
+                                </>
+                            )
                         }
                     </Group>
                     <PostHistory items={postHistory} onFeedback={handleFeedback}/>
