@@ -95,7 +95,7 @@ const PublishBox = ({groupId, text, showSnackBar}) => {
                         "Ура, запись успешно опубликована!",
                         type: "success"});
                     break;
-                case 1:
+                case 3:
                     showSnackBar({text: "Передумали?", type: "danger"});
                     break;
                 default:
@@ -115,13 +115,15 @@ const PublishBox = ({groupId, text, showSnackBar}) => {
                 </Checkbox>
                 {
                     usePublishDate &&
-                    <DateInput
-                        value={publishDate}
-                        onChange={setPublishDate}
-                        enableTime
-                        disablePast
-                        closeOnChange
-                    />
+                    <FormItem top="Дата публикации">
+                        <DateInput
+                            value={publishDate}
+                            onChange={setPublishDate}
+                            enableTime
+                            disablePast
+                            closeOnChange
+                        />
+                    </FormItem>
                 }
                 <Checkbox
                     defaultChecked={fromGroup}

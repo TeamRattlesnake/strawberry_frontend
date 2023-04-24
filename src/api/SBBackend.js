@@ -264,9 +264,9 @@ class StrawberryBackend {
             return data.post_id ? 0 : 1;
         })
         .catch((error) => {
-            // Ошибка
+            if (error?.error_data?.error_code === 10007) return 3;
             console.log(error);
-            return 2
+            return 2;
         });
     }
 
