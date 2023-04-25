@@ -12,8 +12,13 @@ const PostHistory = ({groupId, maxLen, onFeedback}) => {
     const [posts, setPosts] = useState([]);
     maxLen = maxLen || 50;
     useEffect(() => {
-        const {items} = StrawberryBackend.getUserResults(groupId, maxLen, 0);
-        setPosts(items);
+        StrawberryBackend.getUserResults(groupId, maxLen, 0)
+        .then(({items}) => {
+            setPosts(items);
+        })
+        .catch((error) => {
+            console.log(error);
+        })
     }, []);
     return (
         <Group header={<Header>История запросов</Header>}>
