@@ -1,6 +1,6 @@
 import { Icon56RecentOutline } from "@vkontakte/icons";
 import { Button, ButtonGroup, Card, CardScroll, Div, Group, Header, Separator, Textarea } from "@vkontakte/vkui";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import moment from 'moment-timezone';
 import StrawberryBackend from "../../api/SBBackend";

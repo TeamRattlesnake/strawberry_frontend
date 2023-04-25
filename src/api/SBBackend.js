@@ -58,90 +58,30 @@ class StrawberryBackend {
     }
 
     static async appendText(groupId, contextData, hint) {
-        return API.makeRequest({
-            method: "POST",
-            url: "append_text",
-            data: {
-                context_data: contextData,
-                hint,
-                group_id: groupId
-            }
-        })
-        .then((resp) => {
-            if (StrawberryBackend.isOK(resp)) {
-                return StrawberryBackend.getData(resp);
-            }
-        })
-        .catch((error) => {
-            console.log(error);
-        })
+        return StrawberryBackend.__execute("append_text", groupId, contextData, hint);
     }
 
     static async rephraseText(groupId, contextData, hint) {
-        return API.makeRequest({
-            method: "POST",
-            url: "rephrase_text",
-            data: {
-                context_data: contextData,
-                hint,
-                group_id: groupId
-            }
-        })
-        .then((resp) => {
-            if (StrawberryBackend.isOK(resp)) {
-                return StrawberryBackend.getData(resp);
-            }
-        })
-        .catch((error) => {
-            console.log(error);
-        })
+        return StrawberryBackend.__execute("rephrase_text", groupId, contextData, hint);
     }
 
     static async summarizeText(groupId, contextData, hint) {
-        return API.makeRequest({
-            method: "POST",
-            url: "summarize_text",
-            data: {
-                context_data: contextData,
-                hint,
-                group_id: groupId
-            }
-        })
-        .then((resp) => {
-            if (StrawberryBackend.isOK(resp)) {
-                return StrawberryBackend.getData(resp);
-            }
-        })
-        .catch((error) => {
-            console.log(error);
-        })
+        return StrawberryBackend.__execute("summarize_text", groupId, contextData, hint);
     }
 
     static async unmaskText(groupId, contextData, hint) {
-        return API.makeRequest({
-            method: "POST",
-            url: "unmask_text",
-            data: {
-                context_data: contextData,
-                hint,
-                group_id: groupId
-            }
-        })
-        .then((resp) => {
-            if (StrawberryBackend.isOK(resp)) {
-                return StrawberryBackend.getData(resp);
-            }
-        })
-        .catch((error) => {
-            console.log(error);
-        })
+        return StrawberryBackend.__execute("unmask_text", groupId, contextData, hint);
     }
 
     static async generateText(groupId, contextData, hint) {
+        return StrawberryBackend.__execute("generate_text", groupId, contextData, hint);
+    }
+
+    static async __execute(methodName, groupId, contextData, hint) {
         // генерация по теме hint
         return API.makeRequest({
             method: "POST",
-            url: "generate_text",
+            url: methodName,
             data: {
                 context_data: contextData,
                 hint,
@@ -150,11 +90,12 @@ class StrawberryBackend {
         })
         .then((resp) => {
             if (StrawberryBackend.isOK(resp)) {
-                return StrawberryBackend.getData(resp);
+                return StrawberryBackend.getData(resp)?.text_id;
             }
         })
         .catch((error) => {
             console.log(error);
+            return false;
         })
     }
 
@@ -291,6 +232,45 @@ class StrawberryBackend {
         .catch((error) => {
             console.log(error);
             return defaultResp;
+        })
+    }
+
+    static async getGenStatus(textId) {
+        return API.makeRequest({
+            method: "GET",
+            url: "get_gen_status",
+            params: {
+                text_id: textId
+            }
+        })
+        .then((resp) => {
+            if (StrawberryBackend.isOK(resp)) {
+                const text_status = StrawberryBackend.getData(resp)?.text_status;
+                return text_status === 1;
+            }
+            return false;
+        })
+        .catch((error) => {
+            console.log(error);
+            return false;
+        })
+    }
+
+    static async getGenResult(textId) {
+        return API.makeRequest({
+            method: "GET",
+            url: "get_gen_result",
+            params: {
+                text_id: textId
+            }
+        })
+        .then((resp) => {
+            if (StrawberryBackend.isOK(resp)) {
+                return StrawberryBackend.getData(resp)?.text_data;
+            }
+        })
+        .catch((error) => {
+            console.log(error);
         })
     }
 }

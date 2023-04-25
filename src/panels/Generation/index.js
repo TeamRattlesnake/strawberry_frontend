@@ -16,6 +16,26 @@ import ServiceList from "./ServiceList";
 import PublishBox from "./PublishBox";
 
 
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+const executeWrapper = (execute) => {
+    return async function() {
+        const textId = await execute.apply(this, arguments)
+        while (textId) {
+            const ok = await StrawberryBackend.getGenStatus(textId);
+            console.log('ok', ok);
+            if (ok) {
+                const res = await StrawberryBackend.getGenResult(textId);
+                console.log('res', res);
+                return res
+            }
+            await delay(1000);
+        }
+    };
+}
+
 export const Service = {
     TEXTGEN_THEME: {
         id: "textgen_theme",
@@ -24,7 +44,7 @@ export const Service = {
         //placeholder: "Ваша тема для текста (о чем он будет?)",
         button_name: "Создать текст",
         icon: <Icon24WriteOutline/>,
-        execute: StrawberryBackend.generateText,
+        execute: executeWrapper(StrawberryBackend.generateText),
         hint: "В этом режиме можно с использованием вашего краткого описания текста (темы) создать текст побольше! Попробуйте ввести тему текста и создать что-то новое."
     },
     TEXTGEN: {
@@ -34,7 +54,7 @@ export const Service = {
         //placeholder: "Текст, который вы хотите продолжить",
         button_name: "Продолжить текст",
         icon: <Icon24ArrowRightCircleOutline/>,
-        execute: StrawberryBackend.appendText,
+        execute: executeWrapper(StrawberryBackend.appendText),
         hint: "В этом режиме можно продолжить введенный вами текст. Введите начало текста, который вы хотите написать, и мы его продолжим!"
     },
     REPHRASE: {
@@ -44,7 +64,7 @@ export const Service = {
         //placeholder: "Текст, который вы хотите перефразировать",
         button_name: "Перефразировать текст",
         icon: <Icon24MagicWandOutline/>,
-        execute: StrawberryBackend.rephraseText,
+        execute: executeWrapper(StrawberryBackend.rephraseText),
         hint: "В этом режиме можно перефразировать текст. Введите текст, и мы его перепишем, сохранив при этом основной смысл!"
     },
     SUMMARIZE: {
@@ -54,7 +74,7 @@ export const Service = {
         //placeholder: "Большой текст, который нужно резюмировать (сократить)",
         button_name: "Резюмировать текст",
         icon: <Icon24SubtitlesOutline/>,
-        execute: StrawberryBackend.summarizeText,
+        execute: executeWrapper(StrawberryBackend.summarizeText),
         hint: "В этом режиме можно сократить текст, оставив только самое главное, то есть сохранить основной смысл текста! Введите объемный текст, который нужно сократить, об остальном мы позаботимся сами."
     },
     BERT: {
@@ -64,7 +84,7 @@ export const Service = {
         //placeholder: "Текст, в котором нужно заменить его часть/части (обязательно с маской <MASK> в местах замены)",
         button_name: "Заменить часть текста",
         icon: <Icon24Shuffle/>,
-        execute: StrawberryBackend.unmaskText,
+        execute: executeWrapper(StrawberryBackend.unmaskText),
         hint: "В этом режиме можно заменить конкретные части текста (слово или слова) на максимально подходящие по смыслу! Чтобы указать место, где нужно выполнить замену, напишите \"<MASK>\". Мы постараемся заменить это ключевое слово на подходящее по смыслу."
     }
 };
@@ -125,7 +145,7 @@ const GenerationPage = ({id, go, dataset}) => {
     const handleExecute = () => {
         setIsLoading(true);
         service.execute(dataset.targetGroup.id, dataset.targetGroup.texts, text)
-        .then(({text_data}) => {
+        .then((text_data) => {
             setText(text_data);
             Math.random() <= 0.3
             &&
