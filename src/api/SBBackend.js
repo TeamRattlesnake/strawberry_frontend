@@ -224,7 +224,7 @@ class StrawberryBackend {
         })
         .then((resp) => {
             if (StrawberryBackend.isOK(resp)) {
-                return {count: response.data?.count, items: StrawberryBackend.getData(resp)};
+                return {count: resp.data?.count, items: StrawberryBackend.getData(resp)};
             } else {
                 return defaultResp;
             }
