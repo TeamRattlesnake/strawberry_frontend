@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-import { Panel, Group, Div, Avatar, RichCell, Spacing, Separator, Pagination, Spinner, Tabs, TabsItem, CellButton, Search } from '@vkontakte/vkui';
+import { Panel, Group, Div, Avatar, RichCell, Spacing, Separator, Pagination, Spinner, Tabs, TabsItem, CellButton, Search, usePlatform } from '@vkontakte/vkui';
 import { Icon24StarsOutline } from '@vkontakte/icons';
 import StrawberryBackend from '../../api/SBBackend';
 import PanelWrapper from '../PanelWrapper';
@@ -120,7 +120,7 @@ const GroupList = ({ go, dataset }) => {
 					groups && totalPages > 1 &&
 					<Pagination
 						currentPage={currentPage}
-						siblingCount={1}
+						siblingCount={usePlatform() === 'ios' || usePlatform() === 'android' ? 0 : 1}
 						boundaryCount={1}
 						totalPages={totalPages}
 						onChange={(page) => setCurrentPage(page)}
