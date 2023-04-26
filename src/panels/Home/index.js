@@ -104,29 +104,49 @@ const GroupList = ({ go, dataset }) => {
 			<Spacing size={24}>
 				<Separator />
 			</Spacing>
-			<div
-				style={{
-					display: "flex",
-					flexDirection: "row",
-					justifyContent: "space-between",
-					alignItems: "center",
-				}}
-			>
-				<Search
-					value={searchQuery}
-					onChange={(e) => setSearchQuery(e.target.value)}
-				/>
-				{
-					groups && totalPages > 1 &&
-					<Pagination
-						currentPage={currentPage}
-						siblingCount={usePlatform() === 'ios' || usePlatform() === 'android' ? 0 : 1}
-						boundaryCount={1}
-						totalPages={totalPages}
-						onChange={(page) => setCurrentPage(page)}
+			{
+				usePlatform() === 'ios' || usePlatform() === 'android' ?
+				<>
+					<Search
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
 					/>
-				}
-			</div>
+					{
+						groups && totalPages > 1 &&
+						<Pagination
+							currentPage={currentPage}
+							siblingCount={1}
+							boundaryCount={1}
+							totalPages={totalPages}
+							onChange={(page) => setCurrentPage(page)}
+						/>
+					}
+				</>
+				:
+				<div
+					style={{
+						display: "flex",
+						flexDirection: "row",
+						justifyContent: "space-between",
+						alignItems: "center",
+					}}
+				>
+					<Search
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
+					/>
+					{
+						groups && totalPages > 1 &&
+						<Pagination
+							currentPage={currentPage}
+							siblingCount={1}
+							boundaryCount={1}
+							totalPages={totalPages}
+							onChange={(page) => setCurrentPage(page)}
+						/>
+					}
+				</div>
+			}
 			<Spacing size={24}>
 				<Separator />
 			</Spacing>
