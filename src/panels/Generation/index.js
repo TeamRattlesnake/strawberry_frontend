@@ -14,6 +14,7 @@ import Hint from "./Hint";
 import PostHistory from "./PostHistory";
 import ServiceList from "./ServiceList";
 import PublishBox from "./PublishBox";
+import PanelWrapper from "../PanelWrapper";
 
 
 function delay(ms) {
@@ -100,6 +101,7 @@ const GenerationPage = ({id, go, dataset}) => {
     const [service, setService] = useState(serviceItemDefault);
     const [text, setText] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [posts, setPosts] = useState([]);
 
     const getServiceStorage = (serviceKey) => {
         const data = JSON.parse(localStorage.getItem("sb_service_data"));
@@ -142,11 +144,22 @@ const GenerationPage = ({id, go, dataset}) => {
         setServiceData(getServiceStorage(e.target.value));
     }
 
+    const updateHistory = () => {
+        StrawberryBackend.getUserResults(dataset.targetGroup.id, 50, 0)
+        .then(({items}) => {
+            setPosts(items);
+        })
+        .catch((error) => {
+            console.log(error);
+        })
+    }
+
     const handleExecute = () => {
         setIsLoading(true);
         service.execute(dataset.targetGroup.id, dataset.targetGroup.texts, text)
         .then((text_data) => {
             setText(text_data);
+            updateHistory();
             Math.random() <= 0.3
             &&
             setTimeout(
@@ -225,7 +238,7 @@ const GenerationPage = ({id, go, dataset}) => {
                             )
                         }
                     </Group>
-                    <PostHistory groupId={group.id} onFeedback={handleFeedback}/>
+                    <PostHistory onFeedback={handleFeedback} posts={posts} updateHistory={updateHistory}/>
                 </SplitCol>
             </SplitLayout>
         </Panel>

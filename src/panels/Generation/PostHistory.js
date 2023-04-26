@@ -8,17 +8,9 @@ import StrawberryBackend from "../../api/SBBackend";
 moment.locale('ru');
 
 
-const PostHistory = ({groupId, maxLen, onFeedback}) => {
-    const [posts, setPosts] = useState([]);
-    maxLen = maxLen || 50;
+const PostHistory = ({onFeedback, posts, updateHistory}) => {
     useEffect(() => {
-        StrawberryBackend.getUserResults(groupId, maxLen, 0)
-        .then(({items}) => {
-            setPosts(items);
-        })
-        .catch((error) => {
-            console.log(error);
-        })
+        updateHistory()
     }, []);
     return (
         <Group header={<Header>История запросов</Header>}>
@@ -29,8 +21,14 @@ const PostHistory = ({groupId, maxLen, onFeedback}) => {
                     <CardScroll size="l">
                         {
                             posts.map((post) => {
-                                const onBadResult = () => onFeedback(post.post_id, -1);
-                                const onGoodResult = () => onFeedback(post.post_id, 1);
+                                const onBadResult = () => {
+                                    onFeedback(post.post_id, -1);
+                                    updateHistory();
+                                }
+                                const onGoodResult = () => {
+                                    onFeedback(post.post_id, 1);
+                                    updateHistory();
+                                }
                                 return (
                                     <Card
                                         key={post.id}

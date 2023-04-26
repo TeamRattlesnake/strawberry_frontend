@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Panel, Group, Div, Avatar, RichCell, Spacing, Separator, Pagination, Spinner, Tabs, TabsItem, CellButton, Search } from '@vkontakte/vkui';
 import { Icon24StarsOutline } from '@vkontakte/icons';
 import StrawberryBackend from '../../api/SBBackend';
+import PanelWrapper from '../PanelWrapper';
 
 
 export const FilterMode = {
@@ -175,9 +176,9 @@ const GroupList = ({ go, dataset }) => {
 
 const Home = ({ id, go, accessToken, dataset }) => {
 	return (
-		<Panel id={id}>
+		<PanelWrapper id={id}>
 			<GroupList go={go} accessToken={accessToken} dataset={dataset}/>
-		</Panel>
+		</PanelWrapper>
 	);
 };
 

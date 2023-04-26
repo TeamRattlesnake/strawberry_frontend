@@ -10,7 +10,7 @@ const PublishBox = ({groupId, text, showSnackBar}) => {
     const handlePublish = () => {
         StrawberryBackend.publishPost(groupId, text, {
             from_group: fromGroup,
-            publish_date: usePublishDate && Math.floor(publishDate.getTime() / 1000),
+            publish_date: usePublishDate ? Math.floor(publishDate.getTime() / 1000) : undefined,
         })
         .then((status) => {
             switch (status) {
