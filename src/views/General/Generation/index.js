@@ -1,4 +1,4 @@
-import {Avatar, Button, Checkbox, DateInput, Div, FormItem, Group, Panel, PanelHeader, PanelHeaderBack, PanelHeaderContent, Separator, Spacing, SplitCol, SplitLayout, Textarea } from "@vkontakte/vkui";
+import {Avatar, Button, Checkbox, DateInput, Div, FormItem, Group, Panel, PanelHeader, PanelHeaderBack, PanelHeaderContent, Progress, Separator, Spacing, SplitCol, SplitLayout, Textarea } from "@vkontakte/vkui";
 import React, {useEffect, useState} from "react";
 
 import { Icon24WriteOutline } from '@vkontakte/icons';
@@ -7,14 +7,15 @@ import { Icon24MagicWandOutline } from '@vkontakte/icons';
 import { Icon24SubtitlesOutline } from '@vkontakte/icons';
 import { Icon24Shuffle } from '@vkontakte/icons';
 
-import StrawberryBackend from "../../api/SBBackend";
+import StrawberryBackend from "../../../api/SBBackend";
 import { FilterMode } from "../Home";
 
 import Hint from "./Hint";
 import PostHistory from "./PostHistory";
 import ServiceList from "./ServiceList";
 import PublishBox from "./PublishBox";
-import PanelWrapper from "../PanelWrapper";
+import { useRouter } from "@happysanta/router";
+import { PanelAlias } from "../../../const";
 
 
 function delay(ms) {
@@ -26,10 +27,11 @@ const executeWrapper = (execute) => {
         const textId = await execute.apply(this, arguments)
         while (textId) {
             const ok = await StrawberryBackend.getGenStatus(textId);
-            console.log('ok', ok);
+            if (ok === null) {
+                return ok;
+            }
             if (ok) {
                 const res = await StrawberryBackend.getGenResult(textId);
-                console.log('res', res);
                 return res
             }
             await delay(1000);
@@ -42,7 +44,7 @@ export const Service = {
         id: "textgen_theme",
         alias: "Создать текст с нуля по заданной теме",
         textarea_top: "Тема (краткое описание) для текста, который нужно создать:",
-        //placeholder: "Ваша тема для текста (о чем он будет?)",
+        placeholder: "Ваша тема для текста (о чем он будет?)",
         button_name: "Создать текст",
         icon: <Icon24WriteOutline/>,
         execute: executeWrapper(StrawberryBackend.generateText),
@@ -52,7 +54,7 @@ export const Service = {
         id: "text_gen",
         alias: "Продолжить текст",
         textarea_top: "Текст, который нужно продолжить:",
-        //placeholder: "Текст, который вы хотите продолжить",
+        placeholder: "Текст, который вы хотите продолжить",
         button_name: "Продолжить текст",
         icon: <Icon24ArrowRightCircleOutline/>,
         execute: executeWrapper(StrawberryBackend.appendText),
@@ -62,7 +64,7 @@ export const Service = {
         id: "rephrase",
         alias: "Перефразировать текст",
         textarea_top: "Текст, который нужно перефразировать:",
-        //placeholder: "Текст, который вы хотите перефразировать",
+        placeholder: "Текст, который вы хотите перефразировать",
         button_name: "Перефразировать текст",
         icon: <Icon24MagicWandOutline/>,
         execute: executeWrapper(StrawberryBackend.rephraseText),
@@ -72,7 +74,7 @@ export const Service = {
         id: "summarize",
         alias: "Резюмировать текст",
         textarea_top: "Текст, который нужно сократить (резюмировать):",
-        //placeholder: "Большой текст, который нужно резюмировать (сократить)",
+        placeholder: "Большой текст, который нужно резюмировать (сократить)",
         button_name: "Резюмировать текст",
         icon: <Icon24SubtitlesOutline/>,
         execute: executeWrapper(StrawberryBackend.summarizeText),
@@ -82,7 +84,7 @@ export const Service = {
         id: "bert",
         alias: "Заменить часть текста",
         textarea_top: "Текст, в котором нужно заменить его часть:",
-        //placeholder: "Текст, в котором нужно заменить его часть/части (обязательно с маской <MASK> в местах замены)",
+        placeholder: "Текст, в котором нужно заменить его часть/части (обязательно с маской <MASK> в местах замены)",
         button_name: "Заменить часть текста",
         icon: <Icon24Shuffle/>,
         execute: executeWrapper(StrawberryBackend.unmaskText),
@@ -94,14 +96,31 @@ const serviceStorageDefault = {
     showHint: true,
 }
 
-const GenerationPage = ({id, go, dataset}) => {
+const GenerationPage = ({ id, go, dataset}) => {
     const group = dataset.targetGroup;
     const [serviceKeyDefault, serviceItemDefault] = Object.entries(Service)[0]
     const [serviceKey, setServiceKey] = useState(serviceKeyDefault);
     const [service, setService] = useState(serviceItemDefault);
     const [text, setText] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [timeTarget, setTimeTarget] = useState(null);
+    const [progressPercent, setProgressPercent] = useState(0);
+    const timeTotal = 90; // 2 mins
     const [posts, setPosts] = useState([]);
+
+    const router = useRouter();
+
+    useEffect(() => {
+        if (isLoading) {
+            const intId = setInterval(() => {
+                const timeLeft = timeTarget - new Date().getTime() / 1000;
+                setProgressPercent(100-timeLeft/timeTotal*100);
+            }, 1000)
+            return () => clearInterval(intId);
+        } else {
+            setProgressPercent(100);
+        }
+    }, [isLoading])
 
     const getServiceStorage = (serviceKey) => {
         const data = JSON.parse(localStorage.getItem("sb_service_data"));
@@ -155,9 +174,14 @@ const GenerationPage = ({id, go, dataset}) => {
     }
 
     const handleExecute = () => {
+        setTimeTarget(new Date().getTime() / 1000 + timeTotal);
         setIsLoading(true);
         service.execute(dataset.targetGroup.id, dataset.targetGroup.texts, text)
         .then((text_data) => {
+            if (text_data === null) {
+                dataset.showSnackBar({text: "При генерации контента произошла ошибка", type: "danger"});
+                return
+            }
             setText(text_data);
             updateHistory();
             Math.random() <= 0.3
@@ -181,9 +205,7 @@ const GenerationPage = ({id, go, dataset}) => {
         <Panel id={id}>
             <PanelHeader
                 before={
-                    <PanelHeaderBack onClick={() => go({
-                        "to": "home"
-                    })}/>
+                    <PanelHeaderBack onClick={() =>  router.popPage()}/>
                 }
             >
                 <PanelHeaderContent before={group.photo_200 ? <Avatar size={36} src={group.photo_200}/> : null} status={group.screen_name}>
@@ -218,6 +240,9 @@ const GenerationPage = ({id, go, dataset}) => {
                             </FormItem>
                         </Div>
                         <Div>
+                            <Progress aria-labelledby="progresslabel" value={progressPercent} />
+                        </Div>
+                        <Div>
                             {
                                 <Button
                                     stretched
@@ -233,7 +258,11 @@ const GenerationPage = ({id, go, dataset}) => {
                             (
                                 <>
                                     <Separator/>
-                                    <PublishBox groupId={group.id} text={text} showSnackBar={dataset.showSnackBar}/>
+                                    <PublishBox
+                                        groupId={group.id}
+                                        text={text}
+                                        showSnackBar={dataset.showSnackBar}
+                                    />
                                 </>
                             )
                         }

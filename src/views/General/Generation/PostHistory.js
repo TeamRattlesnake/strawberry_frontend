@@ -3,7 +3,6 @@ import { Button, ButtonGroup, Card, CardScroll, Div, Group, Header, Separator, T
 import { useEffect, useState } from "react";
 
 import moment from 'moment-timezone';
-import StrawberryBackend from "../../api/SBBackend";
 
 moment.locale('ru');
 

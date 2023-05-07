@@ -1,17 +1,20 @@
 import { useState } from "react";
-import StrawberryBackend from "../../api/SBBackend";
+import StrawberryBackend from "../../../api/SBBackend";
 import { Button, Checkbox, DateInput, Div, FormItem, Group } from "@vkontakte/vkui";
 
 
-const PublishBox = ({groupId, text, showSnackBar}) => {
+const PublishBox = ({groupId, text, showSnackBar, onPublish}) => {
     const [fromGroup, setFromGroup] = useState(true);
     const [usePublishDate, setUsePublishDate] = useState(false);
     const [publishDate, setPublishDate] = useState(() => new Date());
     const handlePublish = () => {
-        StrawberryBackend.publishPost(groupId, text, {
+        let payload = {
             from_group: fromGroup,
-            publish_date: usePublishDate ? Math.floor(publishDate.getTime() / 1000) : undefined,
-        })
+        }
+        if (usePublishDate) {
+            payload['publish_date'] = Math.floor(publishDate.getTime() / 1000)
+        }
+        StrawberryBackend.publishPost(groupId, text, payload)
         .then((status) => {
             switch (status) {
                 case 0:
@@ -30,6 +33,7 @@ const PublishBox = ({groupId, text, showSnackBar}) => {
                     break;
             }
         })
+        onPublish && onPublish();
     }
     return (
         <Group mode="plain">

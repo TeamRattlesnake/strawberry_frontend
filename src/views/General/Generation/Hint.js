@@ -1,5 +1,5 @@
 import { Banner, Image } from "@vkontakte/vkui"
-import question from "../../media/question.gif"
+import question from "../../../media/question.gif"
 
 
 const Hint = ({text, onClose}) => {

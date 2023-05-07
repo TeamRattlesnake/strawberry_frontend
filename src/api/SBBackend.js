@@ -2,6 +2,11 @@ import API, { queryParams } from "./API.js";
 import bridge from '@vkontakte/vk-bridge';
 
 
+const LocalStorageKey = {
+    ACCESS_TOKEN_INFO_KEY: "access_token_info"
+}
+
+
 class StrawberryBackend {
     static isOK(response) {
         return response.status === 200 && response.data?.status === 0
@@ -27,11 +32,17 @@ class StrawberryBackend {
         });
     }
 
-    static async getVKToken() {
+    static async getVKToken(scope='groups,wall') {
+        const info = await API.getLSKey("access_token_data") || {};
         return await bridge.send('VKWebAppGetAuthToken', {
-            scope: 'groups,wall',
+            scope,
             app_id: Number(queryParams['vk_app_id']), //51575840
         }).then((data) => {
+            console.log('scope:', scope, 'data:', data);
+            if (data?.access_token) {
+                const newInfo = {...info, [scope]: data?.access_token};
+                API.setLSKey("access_token_data", newInfo);
+            }
             return data?.access_token
         }).catch((error) => {
             console.log(error);
@@ -100,7 +111,7 @@ class StrawberryBackend {
     }
 
     static async fetchGroupPosts(groupId, numPosts) {
-        const accessToken = await StrawberryBackend.getVKToken();
+        const accessToken = await StrawberryBackend.getVKToken('groups');
         return bridge.send('VKWebAppCallAPIMethod', {
             method: 'wall.get',
             params: {
@@ -142,7 +153,7 @@ class StrawberryBackend {
     }
 
     static async searchGroups(query, currentPage, perPage) {
-        const accessToken = await StrawberryBackend.getVKToken();
+        const accessToken = await StrawberryBackend.getVKToken('groups');
         let groupsData = await bridge.send('VKWebAppCallAPIMethod', {
             method: 'groups.search',
             params: {
@@ -177,7 +188,7 @@ class StrawberryBackend {
     }
 
     static async getGroups(currentPage, perPage, mode) {
-        const accessToken = await StrawberryBackend.getVKToken();
+        const accessToken = await StrawberryBackend.getVKToken('groups');
         return await bridge.send('VKWebAppCallAPIMethod', {
             method: 'groups.get',
             params: {
@@ -246,13 +257,13 @@ class StrawberryBackend {
         .then((resp) => {
             if (StrawberryBackend.isOK(resp)) {
                 const text_status = StrawberryBackend.getData(resp)?.text_status;
-                return text_status === 1;
+                return text_status === 2 ? null : text_status === 1;
             }
-            return false;
+            return null;
         })
         .catch((error) => {
             console.log(error);
-            return false;
+            return null;
         })
     }
 
@@ -273,6 +284,43 @@ class StrawberryBackend {
             console.log(error);
         })
     }
+
+    static async hasScope(scope) {
+        //console.log('qp', queryParams);
+        //return queryParams?.vk_access_token_settings?.split(',')?.includes(scope);
+        
+        return API.getLSKey("access_token_data")
+        .then((data) => {
+            const val = data?.[scope]
+            const out = val !== null && val !== undefined;
+            console.log('scope:', scope, 'hasScope:', out, data);
+            return out
+        })
+        
+        /*
+        const info = await API.getLSKey(LocalStorageKey.ACCESS_TOKEN_INFO_KEY);
+        const scopes = info?.scopes;
+        if (scopes && scopes.length > 0) {
+            return scopes.includes(scope)
+        } else {
+            return false
+        }
+        */
+    }
+
+    /*
+    static async askScope(scope) {
+        const info = await API.getLSKey(LocalStorageKey.ACCESS_TOKEN_INFO_KEY);
+        const scopes = info?.scopes || [];
+        const token = await StrawberryBackend.getVKToken(scope);
+        if (!token) return;
+        scopes.push(scope);
+        return API.setLSKey(LocalStorageKey.ACCESS_TOKEN_INFO_KEY, {
+            token,
+            scopes
+        })
+    }
+    */
 }
 
 export default StrawberryBackend;

@@ -1,9 +1,14 @@
 import React, { useEffect, useState } from 'react';
 
-import { Panel, Group, Div, Avatar, RichCell, Spacing, Separator, Pagination, Spinner, Tabs, TabsItem, CellButton, Search, usePlatform } from '@vkontakte/vkui';
+import { Panel, Group, Div, Avatar, RichCell, Spacing, Separator, Pagination, Spinner, Tabs, TabsItem, CellButton, Search, usePlatform, Banner, Button, Image } from '@vkontakte/vkui';
 import { Icon24StarsOutline } from '@vkontakte/icons';
-import StrawberryBackend from '../../api/SBBackend';
-import PanelWrapper from '../PanelWrapper';
+import StrawberryBackend from '../../../api/SBBackend';
+import PanelWrapper from '../../PanelWrapper';
+
+import imgQuestion from "../../../media/question.gif";
+import { router, Route } from '../../../router';
+import { useRouter } from '@happysanta/router';
+import { PanelAlias } from '../../../const';
 
 
 export const FilterMode = {
@@ -26,6 +31,18 @@ const GroupList = ({ go, dataset }) => {
 	const [totalPages, setTotalPages] = useState(1);
 	const [isLoading, setIsLoading] = useState(false);
 	const [searchQuery, setSearchQuery] = useState(null);
+	const [hasGroupsAccess, setHasGroupsAccess] = useState(false);
+
+	const targetScope = 'groups';
+
+	const router = useRouter();
+
+	useEffect(() => {
+		StrawberryBackend.hasScope(targetScope)
+		.then((ok) => {
+			setHasGroupsAccess(ok);
+		})
+	}, []);
 
 	const perPage = 7;
 
@@ -42,10 +59,8 @@ const GroupList = ({ go, dataset }) => {
 			}
 			group.texts = texts;
 			group.mode = filterMode;
-			go({
-				to: "text_editor",
-				targetGroup: group,
-			})
+			go({targetGroup: group,})
+			router.pushPage(Route.PAGE_GENERATION);
 		})
 		.catch((error) => {
 			console.log(error);
@@ -73,15 +88,22 @@ const GroupList = ({ go, dataset }) => {
 					mode = "";
 					break;
 			}
+			if (!hasGroupsAccess) {
+				return
+			}
 			promise = StrawberryBackend.getGroups(currentPage, perPage, mode)
 		}
 		promise.then((resp) => {
-			setTotalPages(resp.count);
-			setGroups(resp.items);
+			StrawberryBackend.hasScope(targetScope)
+			.then((ok) => {
+				setHasGroupsAccess(ok);
+				setTotalPages(resp.count);
+				setGroups(resp.items);
+			})
 		}).finally(() => {
 			setIsLoading(false);
 		})
-	}, [searchQuery, filterMode, currentPage]);
+	}, [searchQuery, filterMode, currentPage, hasGroupsAccess]);
 
 	return (
 		<Group>
@@ -101,10 +123,14 @@ const GroupList = ({ go, dataset }) => {
 					})
 				}
 			</Tabs>
-			<Spacing size={24}>
-				<Separator />
-			</Spacing>
 			{
+				hasGroupsAccess &&
+				<Spacing size={24}>
+					<Separator />
+				</Spacing>
+			}
+			{
+				hasGroupsAccess && (
 				usePlatform() === 'ios' || usePlatform() === 'android' ?
 				<>
 					<Search
@@ -146,12 +172,29 @@ const GroupList = ({ go, dataset }) => {
 						/>
 					}
 				</div>
+				)
 			}
 			<Spacing size={24}>
 				<Separator />
 			</Spacing>
 			{
-				isLoading && <Div><Spinner/></Div>
+				hasGroupsAccess ? 
+				(
+					isLoading && <Div><Spinner/></Div>
+				)
+				:
+				(
+					<Banner
+						before={
+							<Image
+								size={96}
+								src={imgQuestion}
+							/>
+						}
+						subheader="Пока здесь нет сообществ. Разрешите право на просмотр списка ваших сообществ, чтобы создать пост."
+						actions={<Button onClick={() => setHasGroupsAccess(true) && setCurrentPage(1)}>Разрешить</Button>}
+					/>
+				)
 			}
 			{
 				!isLoading && groups && groups.map((group, idx) => {
@@ -194,10 +237,10 @@ const GroupList = ({ go, dataset }) => {
 	)
 }
 
-const Home = ({ id, go, accessToken, dataset }) => {
+const Home = ({ id, go, dataset }) => {
 	return (
 		<PanelWrapper id={id}>
-			<GroupList go={go} accessToken={accessToken} dataset={dataset}/>
+			<GroupList go={go} dataset={dataset}/>
 		</PanelWrapper>
 	);
 };

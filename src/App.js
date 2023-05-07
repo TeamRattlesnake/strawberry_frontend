@@ -1,20 +1,55 @@
-import React, { useState } from 'react';
-import { View, AdaptivityProvider, AppRoot, ConfigProvider, SplitLayout, SplitCol, Snackbar, Spacing, usePlatform } from '@vkontakte/vkui';
+import React, { useEffect, useState } from 'react';
+import { AdaptivityProvider, AppRoot, ConfigProvider, SplitLayout, SplitCol, Snackbar, Root } from '@vkontakte/vkui';
 import '@vkontakte/vkui/dist/vkui.css';
 
-import Home from './panels/Home';
-import GenerationPage from './panels/Generation';
 import { Icon28CancelCircleOutline, Icon28CheckCircleOutline, Icon28InfoCircleOutline } from '@vkontakte/icons';
 
 import ico_crying from "./media/crying.gif";
 import ico_normal from "./media/normal.gif";
 import ico_ok from "./media/ok.gif";
+//import Welcome from './views/Welcome';
+import WelcomeView from './views/Welcome';
+import GeneralView, { VIEW_GENERAL } from './views/General';
+//import StrawberryBackend from './api/SBBackend';
+import { showSlides } from './api/slides';
+import API from './api/API';
+import { useLocation } from '@happysanta/router';
+import { ViewAlias } from './const';
 
 
 const App = () => {
+	const location = useLocation();
+	useEffect(() => {
+		API.getLSKey("slides_shown")
+		.then((ok) => {
+			if (!ok) {
+				showSlides(() => API.setLSKey("slides_shown", true));
+			}
+		})
+	}, []);
+	/*
+	useEffect(() => {
+		StrawberryBackend.hasScope("groups")
+		.then((ok) => {
+			if (ok) {
+				StrawberryBackend.hasScope("wall")
+                .then((ok) => {
+                    if (ok) {
+                        setActiveView("general");
+                    }
+                })
+                .catch((error) => {
+                    console.log(error);
+                })
+			}
+		})
+		.catch((error) => {
+			console.log(error);
+		})
+	})
+	*/
 	const [snackbar, setSnackbar] = useState(null);
 	const [dataset, setDataset] = useState({
-		to: "home",
 		showSnackBar: ({text, type}) => {
 			let icon, img_src;
 			switch (type) {
@@ -58,24 +93,29 @@ const App = () => {
 		return {...prev, ...data};
 	})};
 
+
 	return (
 		<ConfigProvider>
 			<AdaptivityProvider>
 				<AppRoot>
 					<SplitLayout>
 						<SplitCol>
-							<View activePanel={dataset.to}>
-								<Home
-									id='home'
+							<Root activeView={location.getViewId()}>
+								{
+									/*
+									<WelcomeView
+										id="welcome"
+										go={() => setActiveView("general")}
+										dataset={dataset}
+									/>
+									*/
+								}
+								<GeneralView
+									id={ViewAlias.VIEW_GENERAL}
 									go={go}
 									dataset={dataset}
 								/>
-								<GenerationPage
-									id="text_editor"
-									go={go}
-									dataset={dataset}
-								/>
-							</View>
+							</Root>
 						</SplitCol>
 						{snackbar}
 					</SplitLayout>
