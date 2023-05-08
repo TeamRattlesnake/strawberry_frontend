@@ -8,7 +8,6 @@ moment.locale('ru');
 
 
 const PostHistory = ({onFeedback, posts, updateHistory}) => {
-    posts = posts.reverse();
     useEffect(() => {
         updateHistory()
     }, []);
