@@ -25,22 +25,17 @@ export const queryParams = parseQueryStringToObj(queryStr);
 
 class API {
     static makeRequest(options) {
-        console.log('test50');
         let endpoint = API_ENDPOINT;
         if (!endpoint.endsWith('/')) {
             endpoint += '/';
         }
-        console.log('test51');
         options.url = endpoint + options.url;
-        console.log('test52');
-        console.log(queryStr);
         const res = axios({
             ...options,
             headers: {
                 Authorization: queryStr,
             }
         });
-        console.log('test53');
         return res
     }
 

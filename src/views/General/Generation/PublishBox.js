@@ -3,7 +3,7 @@ import StrawberryBackend from "../../../api/SBBackend";
 import { Button, Checkbox, DateInput, Div, FormItem, Group } from "@vkontakte/vkui";
 
 
-const PublishBox = ({groupId, text, showSnackBar, onPublish}) => {
+const PublishBox = ({groupId, text, showSnackBar, onPostPublish}) => {
     const [fromGroup, setFromGroup] = useState(true);
     const [usePublishDate, setUsePublishDate] = useState(false);
     const [publishDate, setPublishDate] = useState(() => new Date());
@@ -33,7 +33,7 @@ const PublishBox = ({groupId, text, showSnackBar, onPublish}) => {
                     break;
             }
         })
-        onPublish && onPublish();
+        onPostPublish && onPostPublish();
     }
     return (
         <Group mode="plain">

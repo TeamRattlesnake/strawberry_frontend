@@ -60,7 +60,7 @@ class StrawberryBackend {
             url: "stats/feedback",
             data: {
                 result_id: resultId,
-                score,
+                feedback: score,
             }
         })
         .then((resp) => {
@@ -84,14 +84,11 @@ class StrawberryBackend {
             }
         })
         .then((resp) => {
-            console.log('test41')
             if (StrawberryBackend.isOK(resp)) {
-                console.log('test42')
                 return StrawberryBackend.getData(resp)?.text_id;
             }
         })
         .catch((error) => {
-            console.log('test43')
             console.log(error);
             return false;
         })

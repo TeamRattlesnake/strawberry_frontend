@@ -22,18 +22,15 @@ function delay(ms) {
 
 const executeWrapper = (execute) => {
     return async function() {
-        console.log('test');
         const textId = await execute.apply(this, arguments)
-        console.log('test2');
         while (textId) {
-            console.log('test3');
             const ok = await StrawberryBackend.getGenStatus(textId);
             if (ok === null) {
                 return ok;
             }
             if (ok) {
                 const res = await StrawberryBackend.getGenResult(textId);
-                return res
+                return {text: res, id: textId}
             }
             await delay(1000);
         }
@@ -91,7 +88,6 @@ export const Service = {
         execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.UNMASK_TEXT, ...args)),
         hint: "В этом режиме можно заменить конкретные части текста (слово или слова) на максимально подходящие по смыслу! Чтобы указать место, где нужно выполнить замену, напишите \"<MASK>\". Мы постараемся заменить это ключевое слово на подходящее по смыслу."
     },
-    /*
     EXTEND: {
         id: "extend",
         alias: "Добавить в текст воды",
@@ -102,7 +98,6 @@ export const Service = {
         execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.EXTEND_TEXT, ...args)),
         hint: "Если вам захотелось увеличить уже существующий текст, добавив в него воды, тот этот режим для вас. Данный режим позволяет увеличить общий объем текста, при это сохранив его исходный смысл.",
     }
-    */
 };
 
 const serviceStorageDefault = {
@@ -121,6 +116,7 @@ const GenerationPage = ({ id, go, dataset}) => {
     const [serviceKey, setServiceKey] = useState(serviceKeyDefault);
     const [service, setService] = useState(serviceItemDefault);
     const [text, setText] = useState("");
+    const [textId, setTextId] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [timeTarget, setTimeTarget] = useState(null);
     const [progressPercent, setProgressPercent] = useState(0);
@@ -152,7 +148,6 @@ const GenerationPage = ({ id, go, dataset}) => {
         const newServiceData = {...oldData?.[serviceKey], ...data};
         const newData = {...oldData, [serviceKey]: newServiceData};
         localStorage.setItem("sb_service_data", JSON.stringify(newData));
-        console.log('newServiceData', newServiceData);
         setServiceData((prev) => ({...prev, ...newServiceData}));
     }
 
@@ -180,6 +175,10 @@ const GenerationPage = ({ id, go, dataset}) => {
         setServiceData(getServiceStorage(e.target.value));
     }
 
+    const handlePostPublish = () => {
+        StrawberryBackend.sendFeedback(textId, 5)
+    }
+
     const updateHistory = () => {
         StrawberryBackend.getUserResults(group.id, 50, 0)
         .then(({items}) => {
@@ -193,14 +192,14 @@ const GenerationPage = ({ id, go, dataset}) => {
     const handleExecute = () => {
         setTimeTarget(new Date().getTime() / 1000 + timeTotal);
         setIsLoading(true);
-        console.log(group.id, group.texts, text);
         service.execute(group.id, group.texts, text)
-        .then((text_data) => {
-            if (text_data === null) {
+        .then(({text, id}) => {
+            if (text === null) {
                 dataset.showSnackBar({text: "При генерации контента произошла ошибка", type: "danger"});
                 return
             }
-            setText(text_data);
+            setText(text);
+            setTextId(id);
             updateHistory();
             Math.random() <= 0.3
             &&
@@ -278,12 +277,17 @@ const GenerationPage = ({ id, go, dataset}) => {
                                         groupId={group?.id}
                                         text={text}
                                         showSnackBar={dataset.showSnackBar}
+                                        onPostPublish={handlePostPublish}
                                     />
                                 </>
                             )
                         }
                     </Group>
-                    <PostHistory onFeedback={handleFeedback} posts={posts} updateHistory={updateHistory}/>
+                    <PostHistory
+                        onFeedback={handleFeedback}
+                        posts={posts}
+                        updateHistory={updateHistory}
+                    />
                 </SplitCol>
             </SplitLayout>
         </Panel>
