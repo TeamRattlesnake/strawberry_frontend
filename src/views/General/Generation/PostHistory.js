@@ -8,6 +8,7 @@ moment.locale('ru');
 
 
 const PostHistory = ({onFeedback, posts, updateHistory}) => {
+    posts = posts.reverse();
     useEffect(() => {
         updateHistory()
     }, []);
@@ -41,6 +42,7 @@ const PostHistory = ({onFeedback, posts, updateHistory}) => {
                                     >
                                         <div>
                                             <Div>Создано: {moment.unix(post.date).tz("Europe/Moscow").format('YYYY-MM-DD HH:mm:ss')}</Div>
+                                            <Div>Метод: {post.method}</Div>
                                             <Separator/>
                                             <Div>
                                                 <Textarea

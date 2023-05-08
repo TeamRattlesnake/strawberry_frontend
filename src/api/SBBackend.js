@@ -2,10 +2,14 @@ import API, { queryParams } from "./API.js";
 import bridge from '@vkontakte/vk-bridge';
 
 
-const LocalStorageKey = {
-    ACCESS_TOKEN_INFO_KEY: "access_token_info"
-}
-
+export const GenerationMethod = {
+    GENERATE_TEXT: 'generate_text',
+    APPEND_TEXT: 'append_text',
+    SUMMARIZE_TEXT: 'summarize_text',
+    EXTEND_TEXT: 'extend_text',
+    REPHRASE_TEXT: 'rephrase_text',
+    UNMASK_TEXT: 'unmask_text',
+};
 
 class StrawberryBackend {
     static isOK(response) {
@@ -53,7 +57,7 @@ class StrawberryBackend {
     static async sendFeedback(resultId, score) {
         return API.makeRequest({
             method: "POST",
-            url: "send_feedback",
+            url: "stats/feedback",
             data: {
                 result_id: resultId,
                 score,
@@ -68,43 +72,26 @@ class StrawberryBackend {
         })
     }
 
-    static async appendText(groupId, contextData, hint) {
-        return StrawberryBackend.__execute("append_text", groupId, contextData, hint);
-    }
-
-    static async rephraseText(groupId, contextData, hint) {
-        return StrawberryBackend.__execute("rephrase_text", groupId, contextData, hint);
-    }
-
-    static async summarizeText(groupId, contextData, hint) {
-        return StrawberryBackend.__execute("summarize_text", groupId, contextData, hint);
-    }
-
-    static async unmaskText(groupId, contextData, hint) {
-        return StrawberryBackend.__execute("unmask_text", groupId, contextData, hint);
-    }
-
-    static async generateText(groupId, contextData, hint) {
-        return StrawberryBackend.__execute("generate_text", groupId, contextData, hint);
-    }
-
-    static async __execute(methodName, groupId, contextData, hint) {
-        // генерация по теме hint
-        return API.makeRequest({
+    static async generate(methodName, groupId, contextData, hint) {
+        return await API.makeRequest({
             method: "POST",
-            url: methodName,
+            url: "generation/generate",
             data: {
+                method: methodName,
                 context_data: contextData,
                 hint,
                 group_id: groupId
             }
         })
         .then((resp) => {
+            console.log('test41')
             if (StrawberryBackend.isOK(resp)) {
+                console.log('test42')
                 return StrawberryBackend.getData(resp)?.text_id;
             }
         })
         .catch((error) => {
+            console.log('test43')
             console.log(error);
             return false;
         })
@@ -226,7 +213,7 @@ class StrawberryBackend {
         const defaultResp = {count: 0, items: []};
         return API.makeRequest({
             method: "GET",
-            url: "get_user_results",
+            url: "stats/history",
             params: {
                 group_id: groupId,
                 limit: count,
@@ -249,7 +236,7 @@ class StrawberryBackend {
     static async getGenStatus(textId) {
         return API.makeRequest({
             method: "GET",
-            url: "get_gen_status",
+            url: "generation/status",
             params: {
                 text_id: textId
             }
@@ -270,7 +257,7 @@ class StrawberryBackend {
     static async getGenResult(textId) {
         return API.makeRequest({
             method: "GET",
-            url: "get_gen_result",
+            url: "generation/result",
             params: {
                 text_id: textId
             }

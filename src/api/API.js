@@ -2,7 +2,7 @@ import axios from 'axios';
 import bridge from '@vkontakte/vk-bridge';
 
 
-const API_ENDPOINT = "https://strawberry.adefe.xyz/";
+const API_ENDPOINT = "https://strawberry.adefe.xyz/api/v1/";
 
 const parseQueryString = (string) => {
     return string.slice(1)
@@ -25,17 +25,23 @@ export const queryParams = parseQueryStringToObj(queryStr);
 
 class API {
     static makeRequest(options) {
+        console.log('test50');
         let endpoint = API_ENDPOINT;
         if (!endpoint.endsWith('/')) {
             endpoint += '/';
         }
+        console.log('test51');
         options.url = endpoint + options.url;
-        return axios({
+        console.log('test52');
+        console.log(queryStr);
+        const res = axios({
             ...options,
             headers: {
                 Authorization: queryStr,
             }
         });
+        console.log('test53');
+        return res
     }
 
     static async getLSKey(key) {
