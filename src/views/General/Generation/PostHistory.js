@@ -22,11 +22,9 @@ const PostHistory = ({onFeedback, posts, updateHistory}) => {
                             posts.map((post) => {
                                 const onBadResult = () => {
                                     onFeedback(post.post_id, -1);
-                                    updateHistory();
                                 }
                                 const onGoodResult = () => {
                                     onFeedback(post.post_id, 1);
-                                    updateHistory();
                                 }
                                 return (
                                     <Card

@@ -151,6 +151,16 @@ const GenerationPage = ({ id, go, dataset}) => {
         setServiceData((prev) => ({...prev, ...newServiceData}));
     }
 
+    const updateHistory = () => {
+        StrawberryBackend.getUserResults(group.id, 50, 0)
+        .then(({items}) => {
+            setPosts(items);
+        })
+        .catch((error) => {
+            console.log(error);
+        })
+    }
+
     const handleFeedback = (id, score) => {
         if (!id) return;
         StrawberryBackend.sendFeedback(id, score)
@@ -162,6 +172,7 @@ const GenerationPage = ({ id, go, dataset}) => {
                 :
                 {text: `Не удалось отправить отзыв`, type: "danger"}
             );
+            ok && updateHistory();
         })
     }
 
@@ -177,16 +188,6 @@ const GenerationPage = ({ id, go, dataset}) => {
 
     const handlePostPublish = () => {
         StrawberryBackend.sendFeedback(textId, 5)
-    }
-
-    const updateHistory = () => {
-        StrawberryBackend.getUserResults(group.id, 50, 0)
-        .then(({items}) => {
-            setPosts(items);
-        })
-        .catch((error) => {
-            console.log(error);
-        })
     }
 
     const handleExecute = () => {
