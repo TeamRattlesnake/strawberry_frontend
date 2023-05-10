@@ -166,7 +166,21 @@ const GenerationPage = ({ id, go, dataset}) => {
         })
     }
 
-    const handleFeedback = (id, feedbackType) => {
+    const handleRecover = (postId, setRecoverable) => {
+        StrawberryBackend.postRecover(postId)
+        .then((ok) => {
+            ok && updateHistory();
+            setRecoverable((prev) => {
+                let index = prev.indexOf(postId);
+                if (index !== -1) {
+                    prev.splice(index, 1);
+                }
+                return prev;
+            });
+        })
+    }
+
+    const handleFeedback = (id, feedbackType, callback) => {
         if (!id) return;
         let promise;
         switch (feedbackType) {
@@ -180,14 +194,26 @@ const GenerationPage = ({ id, go, dataset}) => {
                 return;
         }
         promise.then((ok) => {
-            dataset.showSnackBar(
-                ok
-                ?
-                {text: `Спасибо за ваш отзыв!`, type: "success"}
-                :
-                {text: `Не удалось отправить отзыв`, type: "danger"}
-            );
-            ok && updateHistory();
+            const showInfo = (isOK) => {
+                dataset.showSnackBar(
+                    isOK
+                    ?
+                    {text: `Спасибо за ваш отзыв!`, type: "success"}
+                    :
+                    {text: `Не удалось отправить отзыв`, type: "danger"}
+                );
+            };
+            if (feedbackType === FeedbackType.DISLIKE) {
+                StrawberryBackend.postDelete(id)
+                .then((okDelete) => {
+                    showInfo(okDelete);
+                    //okDelete && updateHistory();
+                    okDelete && callback && callback();
+                })
+            } else {
+                showInfo(ok);
+                ok && updateHistory();
+            }
         })
     }
 
@@ -302,6 +328,7 @@ const GenerationPage = ({ id, go, dataset}) => {
                     </Group>
                     <PostHistory
                         onFeedback={handleFeedback}
+                        onRecover={handleRecover}
                         posts={posts}
                         updateHistory={updateHistory}
                     />

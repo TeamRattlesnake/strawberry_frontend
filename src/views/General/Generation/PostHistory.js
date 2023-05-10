@@ -5,13 +5,16 @@ import { useEffect, useState } from "react";
 import moment from 'moment-timezone';
 import { FeedbackType } from ".";
 
+import styles from "./PostHistory.module.css";
+
 moment.locale('ru');
 
 
-const PostHistory = ({onFeedback, posts, updateHistory}) => {
+const PostHistory = ({onFeedback, onRecover, posts, updateHistory}) => {
     useEffect(() => {
         updateHistory()
     }, []);
+    const [recoverablePosts, setRecoverablePosts] = useState([]);
     return (
         <Group header={<Header>История запросов</Header>}>
             <Div>
@@ -22,22 +25,38 @@ const PostHistory = ({onFeedback, posts, updateHistory}) => {
                         {
                             posts.map((post) => {
                                 const onBadResult = () => {
-                                    onFeedback(post.post_id, FeedbackType.DISLIKE);
+                                    onFeedback(post.post_id, FeedbackType.DISLIKE, () => setRecoverablePosts((prev) => {
+                                        if (prev.includes(post.post_id)) return prev;
+                                        return [...prev, post.post_id];
+                                    }));
                                 }
                                 const onGoodResult = () => {
                                     onFeedback(post.post_id, FeedbackType.LIKE);
                                 }
                                 return (
                                     <Card
-                                        key={post.id}
+                                        key={post.post_id}
                                         mode="shadow"
                                         style={{
                                             flex: '2 2 auto',
                                             paddingTop: '24px',
                                             paddingBottom: '24px',
-                                            minWidth: '40vw'
+                                            minWidth: '40vw',
+                                            position: "relative",
                                         }}
                                     >
+                                        {
+                                            recoverablePosts.includes(post.post_id) &&
+                                            <div className={styles['blocking-element']}>
+                                                <span>Запрос удалён</span>
+                                                <Button
+                                                    //stretched
+                                                    onClick={() => onRecover && onRecover(post.post_id, setRecoverablePosts)}
+                                                >
+                                                    Восстановить
+                                                </Button>
+                                            </div>
+                                        }
                                         <div>
                                             <Div>Создано: {moment.unix(post.date).tz("Europe/Moscow").format('YYYY-MM-DD HH:mm:ss')}</Div>
                                             <Div>Метод: {post.method}</Div>
