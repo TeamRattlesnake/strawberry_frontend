@@ -9,7 +9,8 @@ const PublishBox = ({groupId, text, showSnackBar, onPostPublish}) => {
     const [publishDate, setPublishDate] = useState(() => new Date());
     const handlePublish = () => {
         let payload = {
-            from_group: fromGroup ? 1 : 0,
+            from_group: fromGroup ? 1 : 0, // от имени группы или нет
+            signed: fromGroup ? 0 : 1, // подпись снизу
         }
         if (usePublishDate) {
             payload['publish_date'] = Math.floor(publishDate.getTime() / 1000)
