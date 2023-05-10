@@ -37,6 +37,11 @@ const executeWrapper = (execute) => {
     };
 }
 
+export const FeedbackType = {
+    LIKE: 'like',
+    DISLIKE: 'dislike',
+};
+
 export const Service = {
     TEXTGEN_THEME: {
         id: "textgen_theme",
@@ -161,10 +166,20 @@ const GenerationPage = ({ id, go, dataset}) => {
         })
     }
 
-    const handleFeedback = (id, score) => {
+    const handleFeedback = (id, feedbackType) => {
         if (!id) return;
-        StrawberryBackend.sendFeedback(id, score)
-        .then((ok) => {
+        let promise;
+        switch (feedbackType) {
+            case FeedbackType.LIKE:
+                promise = StrawberryBackend.postLike(id);
+                break;
+            case FeedbackType.DISLIKE:
+                promise = StrawberryBackend.postDislike(id);
+                break;
+            default:
+                return;
+        }
+        promise.then((ok) => {
             dataset.showSnackBar(
                 ok
                 ?
@@ -187,7 +202,7 @@ const GenerationPage = ({ id, go, dataset}) => {
     }
 
     const handlePostPublish = () => {
-        StrawberryBackend.sendFeedback(textId, 5)
+        StrawberryBackend.postPublish(textId)
     }
 
     const handleExecute = () => {

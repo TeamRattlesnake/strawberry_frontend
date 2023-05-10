@@ -54,14 +54,66 @@ class StrawberryBackend {
         })
     }
 
-    static async sendFeedback(resultId, score) {
+    static async postLike(resultId) {
         return API.makeRequest({
             method: "POST",
-            url: "stats/feedback",
-            data: {
-                result_id: resultId,
-                feedback: score,
-            }
+            url: `post/${resultId}/like`,
+        })
+        .then((resp) => {
+            return StrawberryBackend.isOK(resp);
+        })
+        .catch((error) => {
+            console.log(error)
+            return false;
+        })
+    }
+
+    static async postDislike(resultId) {
+        return API.makeRequest({
+            method: "POST",
+            url: `post/${resultId}/dislike`,
+        })
+        .then((resp) => {
+            return StrawberryBackend.isOK(resp);
+        })
+        .catch((error) => {
+            console.log(error)
+            return false;
+        })
+    }
+
+    static async postPublish(resultId) {
+        return API.makeRequest({
+            method: "POST",
+            url: `post/${resultId}/publish`,
+        })
+        .then((resp) => {
+            return StrawberryBackend.isOK(resp);
+        })
+        .catch((error) => {
+            console.log(error)
+            return false;
+        })
+    }
+
+    static async postRecover(resultId) {
+        return API.makeRequest({
+            method: "POST",
+            url: `post/${resultId}/recover`,
+        })
+        .then((resp) => {
+            return StrawberryBackend.isOK(resp);
+        })
+        .catch((error) => {
+            console.log(error)
+            return false;
+        })
+    }
+
+    static async postDelete(resultId) {
+        return API.makeRequest({
+            method: "DELETE",
+            url: `post/${resultId}`,
         })
         .then((resp) => {
             return StrawberryBackend.isOK(resp);

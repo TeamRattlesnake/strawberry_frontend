@@ -3,6 +3,7 @@ import { Button, ButtonGroup, Card, CardScroll, Div, Group, Header, Separator, T
 import { useEffect, useState } from "react";
 
 import moment from 'moment-timezone';
+import { FeedbackType } from ".";
 
 moment.locale('ru');
 
@@ -21,10 +22,10 @@ const PostHistory = ({onFeedback, posts, updateHistory}) => {
                         {
                             posts.map((post) => {
                                 const onBadResult = () => {
-                                    onFeedback(post.post_id, -1);
+                                    onFeedback(post.post_id, FeedbackType.DISLIKE);
                                 }
                                 const onGoodResult = () => {
-                                    onFeedback(post.post_id, 1);
+                                    onFeedback(post.post_id, FeedbackType.LIKE);
                                 }
                                 return (
                                     <Card
