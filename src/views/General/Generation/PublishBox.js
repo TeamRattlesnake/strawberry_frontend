@@ -3,7 +3,7 @@ import StrawberryBackend from "../../../api/SBBackend";
 import { Button, Checkbox, DateInput, Div, FormItem, Group } from "@vkontakte/vkui";
 
 
-const PublishBox = ({groupId, text, showSnackBar, onPostPublish}) => {
+const PublishBox = ({groupId, postId, text, showSnackBar, onPostPublish}) => {
     const [fromGroup, setFromGroup] = useState(true);
     const [usePublishDate, setUsePublishDate] = useState(false);
     const [publishDate, setPublishDate] = useState(() => new Date());
@@ -25,6 +25,8 @@ const PublishBox = ({groupId, text, showSnackBar, onPostPublish}) => {
                         :
                         "Ура, запись успешно опубликована!",
                         type: "success"});
+                    StrawberryBackend.postSetPublished(postId); // отправляем информацию о том что пост был опубликован
+                    onPostPublish && onPostPublish({postId});
                     break;
                 case 3: // пользователь отменил процесс публикации
                     showSnackBar({text: "Передумали?", type: "info"});
@@ -34,7 +36,6 @@ const PublishBox = ({groupId, text, showSnackBar, onPostPublish}) => {
                     break;
             }
         })
-        onPostPublish && onPostPublish();
     }
     return (
         <Group mode="plain">
@@ -69,7 +70,7 @@ const PublishBox = ({groupId, text, showSnackBar, onPostPublish}) => {
                     stretched
                     appearance="positive"
                     onClick={handlePublish}
-                    disabled={!text || text.length === 0}
+                    disabled={!text || text.length === 0 || postId === undefined || postId === null}
                 >
                     Опубликовать
                 </Button>

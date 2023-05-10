@@ -121,7 +121,7 @@ const GenerationPage = ({ id, go, dataset}) => {
     const [serviceKey, setServiceKey] = useState(serviceKeyDefault);
     const [service, setService] = useState(serviceItemDefault);
     const [text, setText] = useState("");
-    const [textId, setTextId] = useState(null);
+    const [postId, setPostId] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [timeTarget, setTimeTarget] = useState(null);
     const [progressPercent, setProgressPercent] = useState(0);
@@ -201,10 +201,6 @@ const GenerationPage = ({ id, go, dataset}) => {
         setServiceData(getServiceStorage(e.target.value));
     }
 
-    const handlePostPublish = () => {
-        StrawberryBackend.postSetPublished(textId)
-    }
-
     const handleExecute = () => {
         setTimeTarget(new Date().getTime() / 1000 + timeTotal);
         setIsLoading(true);
@@ -215,7 +211,7 @@ const GenerationPage = ({ id, go, dataset}) => {
                 return
             }
             setText(text);
-            setTextId(id);
+            setPostId(id);
             updateHistory();
             Math.random() <= 0.3
             &&
@@ -296,9 +292,9 @@ const GenerationPage = ({ id, go, dataset}) => {
                                     <Separator/>
                                     <PublishBox
                                         groupId={group?.id}
+                                        postId={postId}
                                         text={text}
                                         showSnackBar={dataset.showSnackBar}
-                                        onPostPublish={handlePostPublish}
                                     />
                                 </>
                             )
