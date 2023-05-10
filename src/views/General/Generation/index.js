@@ -239,7 +239,11 @@ const GenerationPage = ({ id, go, dataset}) => {
             <PanelHeader
                 before={<PanelHeaderBack onClick={() => router.popPage()}/>}
             >
-                <PanelHeaderContent before={group?.photo_200 ? <Avatar size={36} src={group?.photo_200}/> : null} status={group?.screen_name}>
+                <PanelHeaderContent
+                    before={group?.photo_200 ? <Avatar size={36} src={group?.photo_200}/> : null}
+                    status={group?.screen_name}
+                    onClick={() => group?.screen_name && window.open(`https://vk.com/${group?.screen_name}`, "_blank")}
+                >
                     {group?.name}
                 </PanelHeaderContent>
             </PanelHeader>

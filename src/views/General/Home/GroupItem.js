@@ -6,7 +6,12 @@ const GroupItem = ({group, onGenerate}) => {
     return (
         <RichCell
             key={group.id}
-            before={<Avatar src={group.photo_200}/>}
+            before={
+                <Avatar
+                    src={group.photo_200}
+                    onClick={() => group?.screen_name && window.open(`https://vk.com/${group?.screen_name}`, "_blank")}
+                />
+            }
             after={
                 <CellButton
                     after={<Icon24StarsOutline
