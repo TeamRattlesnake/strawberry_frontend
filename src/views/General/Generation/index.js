@@ -1,10 +1,8 @@
-import {Avatar, Button, Div, FormItem, Group, Panel, PanelHeader, PanelHeaderBack, PanelHeaderContent, Progress, Separator, SplitCol, SplitLayout, Textarea } from "@vkontakte/vkui";
+import {Avatar, Button, Div, FormItem, Group, Panel, PanelHeader, PanelHeaderBack, PanelHeaderContent, Progress, Separator, SplitCol, SplitLayout, Textarea, usePlatform } from "@vkontakte/vkui";
 import React, {useEffect, useState} from "react";
 
 import { Icon24Fullscreen, Icon24FullscreenExit, Icon24Switch, Icon24WriteOutline } from '@vkontakte/icons';
 import { Icon24ArrowRightCircleOutline } from '@vkontakte/icons';
-import { Icon24MagicWandOutline } from '@vkontakte/icons';
-import { Icon24SubtitlesOutline } from '@vkontakte/icons';
 import { Icon24Shuffle } from '@vkontakte/icons';
 
 import StrawberryBackend, { GenerationMethod } from "../../../api/SBBackend";
@@ -46,7 +44,7 @@ export const Service = {
     TEXTGEN_THEME: {
         id: "textgen_theme",
         alias: "Создать текст с нуля по заданной теме",
-        textarea_top: "Тема (краткое описание) для текста, который нужно создать:",
+        textarea_top: "Тема (краткое описание) текста:",
         placeholder: "Ваша тема для текста (о чем он будет?)",
         button_name: "Создать текст",
         icon: <Icon24WriteOutline/>,
@@ -76,7 +74,7 @@ export const Service = {
     SUMMARIZE: {
         id: "summarize",
         alias: "Резюмировать текст",
-        textarea_top: "Текст, который нужно сократить (резюмировать):",
+        textarea_top: "Текст, который нужно сократить:",
         placeholder: "Большой текст, который нужно резюмировать (сократить)",
         button_name: "Резюмировать текст",
         icon: <Icon24FullscreenExit/>,
@@ -243,7 +241,7 @@ const GenerationPage = ({ id, go, dataset}) => {
             &&
             setTimeout(
                 () => dataset.showSnackBar({
-                    text: 'Мы будем признательны, если вы оставите фидбэк. Для этого оцените созданный текст в истории запросов.',
+                    text: 'Мы будем признательны, если вы оставите обратную связь. Для этого оцените созданный текст в истории запросов.',
                     type: 'info'
                 }),
                 3000

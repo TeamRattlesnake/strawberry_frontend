@@ -1,5 +1,5 @@
 import { Icon56RecentOutline } from "@vkontakte/icons";
-import { Button, ButtonGroup, Card, CardScroll, Div, Group, Header, Separator, Textarea } from "@vkontakte/vkui";
+import { Button, ButtonGroup, Card, CardScroll, Div, FormItem, Group, Header, Separator, Textarea } from "@vkontakte/vkui";
 import { useEffect, useState } from "react";
 
 import moment from 'moment-timezone';
@@ -21,7 +21,9 @@ const PostHistory = ({onFeedback, onRecover, posts, updateHistory}) => {
                 {
                     posts && posts.length > 0
                     ?
-                    <CardScroll size="l">
+                    <CardScroll
+                        size="s"
+                    >
                         {
                             posts.map((post) => {
                                 const onBadResult = () => {
@@ -38,11 +40,14 @@ const PostHistory = ({onFeedback, onRecover, posts, updateHistory}) => {
                                         key={post.post_id}
                                         mode="shadow"
                                         style={{
-                                            flex: '2 2 auto',
-                                            paddingTop: '24px',
-                                            paddingBottom: '24px',
-                                            minWidth: '40vw',
+                                            //flex: '2 2 auto',
+                                            //paddingTop: '24px',
+                                            //paddingBottom: '24px',
+                                            //minWidth: '20vw',
+                                            //width: '100%',
                                             position: "relative",
+                                            overflow: 'hidden',
+                                            //height: '10em',
                                         }}
                                     >
                                         {
@@ -50,24 +55,26 @@ const PostHistory = ({onFeedback, onRecover, posts, updateHistory}) => {
                                             <div className={styles['blocking-element']}>
                                                 <span>Запрос удалён</span>
                                                 <Button
-                                                    //stretched
                                                     onClick={() => onRecover && onRecover(post.post_id, setRecoverablePosts)}
                                                 >
                                                     Восстановить
                                                 </Button>
                                             </div>
                                         }
-                                        <div>
+                                        <div className={styles.content}>
                                             <Div>Создано: {moment.unix(post.date).tz("Europe/Moscow").format('YYYY-MM-DD HH:mm:ss')}</Div>
                                             <Div>Метод: {post.method}</Div>
+                                            <Div>Опубликовано: {post.published ? 'Да': 'Нет'}</Div>
                                             <Separator/>
                                             <Div>
-                                                <Textarea
-                                                    value={post.text}
-                                                    defaultValue={post.text}
-                                                    rows={6}
-                                                    readOnly
-                                                />
+                                                <FormItem>
+                                                    <Textarea
+                                                        rows={7}
+                                                        value={post.text}
+                                                        defaultValue={post.text}
+                                                        readOnly
+                                                    />
+                                                </FormItem>
                                             </Div>
                                             <Separator/>
                                             <Div>

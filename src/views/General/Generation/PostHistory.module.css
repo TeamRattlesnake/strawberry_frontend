@@ -12,3 +12,11 @@
     background-color: rgba(0, 0, 0, 0.67); /* Darkens the background */
     z-index: 1; /* Places the blocking element above other elements */
 }
+
+.content {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+}
