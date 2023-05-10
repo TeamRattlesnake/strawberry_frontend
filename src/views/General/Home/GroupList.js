@@ -24,7 +24,7 @@ export const FilterMode = {
 	}
 }
 
-const GroupListHeader = ({hasGroupsAccess, searchQuery, groups, totalPages, currentPage, filterMode, setCurrentPage, setFilterMode, setSearchQuery}) => {
+const GroupListHeader = ({showGroups, searchQuery, setSearchQuery, groups, totalPages, currentPage, filterMode, setCurrentPage, setFilterMode}) => {
 	return (
 		<>
 			<Tabs>
@@ -44,35 +44,33 @@ const GroupListHeader = ({hasGroupsAccess, searchQuery, groups, totalPages, curr
 				}
 			</Tabs>
 			{
-				hasGroupsAccess &&
+				showGroups &&
 				<Spacing size={24}>
 					<Separator />
 				</Spacing>
 			}
 			{
-				hasGroupsAccess &&
-				<>
-					<Search
-						value={searchQuery}
-						onChange={(e) => setSearchQuery(e.target.value)}
-					/>
-					{
-						groups && totalPages > 1 &&
-						<Pagination
-							currentPage={currentPage}
-							siblingCount={1}
-							boundaryCount={1}
-							totalPages={totalPages}
-							onChange={(page) => setCurrentPage(page)}
-						/>
-					}
-				</>
+				showGroups && filterMode === FilterMode.ALL &&
+				<Search
+					value={searchQuery}
+					onChange={(e) => setSearchQuery(e.target.value)}
+				/>
+			}
+			{
+				groups && totalPages > 1 &&
+				<Pagination
+					currentPage={currentPage}
+					totalPages={totalPages}
+					onChange={(page) => setCurrentPage(page)}
+					siblingCount={1}
+					boundaryCount={1}
+				/>
 			}
 		</>
 	)
 }
 
-const GroupListContent = ({hasGroupsAccess, isLoading, setHasGroupsAccess, setCurrentPage, groups, handleGenerate}) => {
+const GroupListContent = ({groups, handleGenerate, showGroups, setShowGroups, isLoading}) => {
 	const accessFallback = (
 		<Banner
 			before={
@@ -82,10 +80,10 @@ const GroupListContent = ({hasGroupsAccess, isLoading, setHasGroupsAccess, setCu
 				/>
 			}
 			subheader="Пока здесь нет сообществ. Разрешите право на просмотр списка ваших сообществ, чтобы создать пост."
-			actions={<Button onClick={() => setHasGroupsAccess(true) && setCurrentPage(1)}>Разрешить</Button>}
+			actions={<Button onClick={() => setShowGroups(true)}>Разрешить</Button>}
 		/>
 	);
-	if (!hasGroupsAccess) return accessFallback;
+	if (!showGroups) return accessFallback;
 	if (isLoading) return (<Div><Spinner/></Div>);
 	return (
 		(!groups || groups.length === 0) ?
@@ -114,26 +112,30 @@ const GroupListContent = ({hasGroupsAccess, isLoading, setHasGroupsAccess, setCu
 }
 
 const GroupList = ({ go, dataset }) => {
-	const [groups, setGroups] = useState([]);
+	const [groupsData, setGroupsData] = useState({
+		loading: false,
+		items: [],
+	});
 	const [filterMode, setFilterMode] = useState(FilterMode.ALL);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [totalPages, setTotalPages] = useState(1);
-	const [isLoading, setIsLoading] = useState(false);
 	const [searchQuery, setSearchQuery] = useState(null);
-	const [hasGroupsAccess, setHasGroupsAccess] = useState(false);
-
-	const perPage = 7;
+	const [showGroups, setShowGroups] = useState(false);
+	const [perPage, _] = useState(7);
 
 	const targetScope = 'groups';
 
 	const router = useRouter();
 
-	useEffect(() => {
+	const updateShowGroups = (onPostUpdate) => { // обновить условие отображение плашки о разрешениях
 		StrawberryBackend.hasScope(targetScope)
 		.then((ok) => {
-			setHasGroupsAccess(ok);
+			setShowGroups(ok);
 		})
-	}, []);
+		.finally(() => {
+			onPostUpdate && onPostUpdate();
+		})
+	}
 
 	const handleGenerate = (group) => {
 		StrawberryBackend.fetchGroupPosts(group.id, 20)
@@ -155,66 +157,119 @@ const GroupList = ({ go, dataset }) => {
 		})
 	};
 
+	const handleFetchGroups = () => {
+		if (!showGroups) return;
+		let mode;
+		switch (filterMode) {
+			case FilterMode.MANAGED:
+				mode = "moder";
+				break;
+			case FilterMode.ALL:
+				mode = "";
+				break;
+			default:
+				return;
+		}
+		setGroupsData((prev) => ({
+			...prev,
+			loading: true,
+		}));
+		StrawberryBackend.getGroups(currentPage, perPage, mode)
+		.then((resp) => {
+			updateShowGroups(() => {
+				setTotalPages(resp.count);
+				setGroupsData((prev) => ({
+					...prev,
+					loading: false,
+					items: resp.items
+				}));
+			})
+		})
+		.catch(() => {
+			setGroupsData((prev) => ({
+				...prev,
+				loading: false,
+			}));
+		})
+	}
+
+	const handleSearchGroups = () => {
+		setGroupsData((prev) => ({
+			...prev,
+			loading: true,
+		}));
+		StrawberryBackend.searchGroups(searchQuery, currentPage, perPage)
+		.then((resp) => {
+			updateShowGroups(() => {
+				setTotalPages(resp.count);
+				setGroupsData((prev) => ({
+					...prev,
+					loading: false,
+					items: resp.items
+				}));
+			})
+		})
+		.catch((error) => {
+			console.log(error);
+			setGroupsData((prev) => ({
+				...prev,
+				loading: false,
+			}));
+		})
+	}
+
+	const updateData = () => {
+		if (searchQuery) {
+			handleSearchGroups();
+		} else {
+			handleFetchGroups();
+		}
+	}
+
+	useEffect(() => {
+		showGroups && updateData();
+	}, [showGroups])
+
+	// при первой загрузке проверяем есть ли у нас права группы, выставляем соответствующий showGroups
+	useEffect(() => {
+		updateShowGroups();
+	}, []);
+
 	useEffect(() => {
 		setCurrentPage(1);
-		setGroups([]);
-	}, [filterMode])
+		setSearchQuery(null); // опустошаем поисковый запрос
+	}, [filterMode]) 
 
-    useEffect(() => {
-		setIsLoading(true);
-		let promise;
-		if (Boolean(searchQuery)) {
-			promise = StrawberryBackend.searchGroups(searchQuery, currentPage, perPage)
-		} else {
-			let mode;
-			switch (filterMode) {
-				case FilterMode.MANAGED:
-					mode = "moder";
-					break;
-				default:
-					mode = "";
-					break;
-			}
-			if (!hasGroupsAccess) {
-				return
-			}
-			promise = StrawberryBackend.getGroups(currentPage, perPage, mode)
-		}
-		promise.then((resp) => {
-			StrawberryBackend.hasScope(targetScope)
-			.then((ok) => {
-				setHasGroupsAccess(ok);
-				setTotalPages(resp.count);
-				setGroups(resp.items);
-			})
-		}).finally(() => {
-			setIsLoading(false);
-		})
-	}, [searchQuery, filterMode, currentPage, hasGroupsAccess]);
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [searchQuery]);
+
+	useEffect(() => {
+		updateData();
+	}, [searchQuery, filterMode, currentPage])
 
 	return (
 		<Group>
 			<GroupListHeader
-				hasGroupsAccess={hasGroupsAccess}
+				showGroups={showGroups}
 				searchQuery={searchQuery}
-				groups={groups}
+				setSearchQuery={setSearchQuery}
+				groups={groupsData.items}
 				totalPages={totalPages}
 				currentPage={currentPage}
 				filterMode={filterMode}
 				setCurrentPage={setCurrentPage}
 				setFilterMode={setFilterMode}
-				setSearchQuery={setSearchQuery}
 			/>
 			<Spacing size={24}>
 				<Separator />
 			</Spacing>
 			<GroupListContent
-				hasGroupsAccess={hasGroupsAccess}
-				isLoading={isLoading}
-				setHasGroupsAccess={setHasGroupsAccess}
-				setCurrentPage={setCurrentPage}
-				groups={groups}
+				groups={groupsData.items}
 				handleGenerate={handleGenerate}
+				showGroups={showGroups}
+				setShowGroups={setShowGroups}
+				isLoading={groupsData.loading}
 			/>
 		</Group>
 	)
