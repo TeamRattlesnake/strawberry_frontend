@@ -279,6 +279,7 @@ const GenerationPage = ({ id, go, dataset}) => {
                                     stretched
                                     loading={isLoading}
                                     onClick={handleExecute}
+                                    disabled={!text || text.length === 0}
                                 >
                                     {service.button_name}
                                 </Button>

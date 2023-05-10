@@ -69,6 +69,7 @@ const PublishBox = ({groupId, text, showSnackBar, onPostPublish}) => {
                     stretched
                     appearance="positive"
                     onClick={handlePublish}
+                    disabled={!text || text.length === 0}
                 >
                     Опубликовать
                 </Button>
