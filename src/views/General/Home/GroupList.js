@@ -4,6 +4,8 @@ import { Group, Div, Spacing, Separator, Pagination, Spinner, Tabs, TabsItem, Se
 import StrawberryBackend from '../../../api/SBBackend';
 
 import imgQuestion from "../../../media/question.gif";
+import imgCrying from "../../../media/crying.gif";
+
 import { Route } from '../../../router';
 import { useRouter } from '@happysanta/router';
 import GroupItem from './GroupItem';
@@ -20,6 +22,95 @@ export const FilterMode = {
 		alias: 'В управлении',
 		//icon: <Icon24StarsOutline/>
 	}
+}
+
+const GroupListHeader = ({hasGroupsAccess, searchQuery, groups, totalPages, currentPage, filterMode, setCurrentPage, setFilterMode, setSearchQuery}) => {
+	return (
+		<>
+			<Tabs>
+				{
+					Object.values(FilterMode).map((fm) => {
+						return (
+							<TabsItem
+								//before={fm.icon}
+								selected={filterMode === fm}
+								onClick={() => setFilterMode(fm)}
+								id={fm.id}
+							>
+								{fm.alias}
+							</TabsItem>
+						)
+					})
+				}
+			</Tabs>
+			{
+				hasGroupsAccess &&
+				<Spacing size={24}>
+					<Separator />
+				</Spacing>
+			}
+			{
+				hasGroupsAccess &&
+				<>
+					<Search
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
+					/>
+					{
+						groups && totalPages > 1 &&
+						<Pagination
+							currentPage={currentPage}
+							siblingCount={1}
+							boundaryCount={1}
+							totalPages={totalPages}
+							onChange={(page) => setCurrentPage(page)}
+						/>
+					}
+				</>
+			}
+		</>
+	)
+}
+
+const GroupListContent = ({hasGroupsAccess, isLoading, setHasGroupsAccess, setCurrentPage, groups, handleGenerate}) => {
+	const accessFallback = (
+		<Banner
+			before={
+				<Image
+					size={96}
+					src={imgQuestion}
+				/>
+			}
+			subheader="Пока здесь нет сообществ. Разрешите право на просмотр списка ваших сообществ, чтобы создать пост."
+			actions={<Button onClick={() => setHasGroupsAccess(true) && setCurrentPage(1)}>Разрешить</Button>}
+		/>
+	);
+	if (!hasGroupsAccess) return accessFallback;
+	if (isLoading) return (<Div><Spinner/></Div>);
+	return (
+		(!groups || groups.length === 0) ?
+		(
+			<Div>
+				<div style={{
+					display: "flex",
+					flexDirection: "column",
+					justifyContent: "center",
+					alignItems: "center",
+					textAlign: "center",
+					width: "100%"
+				}}>
+					<img height="auto" width="100px" src={imgCrying}></img>
+					<span>Нет данных</span>
+				</div>
+			</Div>
+		)
+		:
+		(
+			<>
+				{groups.map((group) => <GroupItem group={group} onGenerate={handleGenerate}/>)}
+			</>
+		)
+	)
 }
 
 const GroupList = ({ go, dataset }) => {
@@ -103,113 +194,28 @@ const GroupList = ({ go, dataset }) => {
 
 	return (
 		<Group>
-			<Tabs>
-				{
-					Object.values(FilterMode).map((fm) => {
-						return (
-							<TabsItem
-								//before={fm.icon}
-								selected={filterMode === fm}
-								onClick={() => setFilterMode(fm)}
-								id={fm.id}
-							>
-								{fm.alias}
-							</TabsItem>
-						)
-					})
-				}
-			</Tabs>
-			{
-				hasGroupsAccess &&
-				<Spacing size={24}>
-					<Separator />
-				</Spacing>
-			}
-			{
-				hasGroupsAccess && (
-				usePlatform() === 'ios' || usePlatform() === 'android' ?
-				<>
-					<Search
-						value={searchQuery}
-						onChange={(e) => setSearchQuery(e.target.value)}
-					/>
-					{
-						groups && totalPages > 1 &&
-						<Pagination
-							currentPage={currentPage}
-							siblingCount={1}
-							boundaryCount={1}
-							totalPages={totalPages}
-							onChange={(page) => setCurrentPage(page)}
-						/>
-					}
-				</>
-				:
-				<div
-					style={{
-						display: "flex",
-						flexDirection: "row",
-						justifyContent: "space-between",
-						alignItems: "center",
-					}}
-				>
-					<Search
-						value={searchQuery}
-						onChange={(e) => setSearchQuery(e.target.value)}
-					/>
-					{
-						groups && totalPages > 1 &&
-						<Pagination
-							currentPage={currentPage}
-							siblingCount={1}
-							boundaryCount={1}
-							totalPages={totalPages}
-							onChange={(page) => setCurrentPage(page)}
-						/>
-					}
-				</div>
-				)
-			}
+			<GroupListHeader
+				hasGroupsAccess={hasGroupsAccess}
+				searchQuery={searchQuery}
+				groups={groups}
+				totalPages={totalPages}
+				currentPage={currentPage}
+				filterMode={filterMode}
+				setCurrentPage={setCurrentPage}
+				setFilterMode={setFilterMode}
+				setSearchQuery={setSearchQuery}
+			/>
 			<Spacing size={24}>
 				<Separator />
 			</Spacing>
-			{
-				hasGroupsAccess ? 
-				(
-					isLoading && <Div><Spinner/></Div>
-				)
-				:
-				(
-					<Banner
-						before={
-							<Image
-								size={96}
-								src={imgQuestion}
-							/>
-						}
-						subheader="Пока здесь нет сообществ. Разрешите право на просмотр списка ваших сообществ, чтобы создать пост."
-						actions={<Button onClick={() => setHasGroupsAccess(true) && setCurrentPage(1)}>Разрешить</Button>}
-					/>
-				)
-			}
-			{
-				!isLoading && groups && groups.map((group) => <GroupItem group={group} onGenerate={handleGenerate}/>)
-			}
-			{
-				!isLoading && groups.length === 0 && <Div>
-					<div style={{
-						display: "flex",
-						flexDirection: "column",
-						justifyContent: "center",
-						alignItems: "center",
-						textAlign: "center",
-						width: "100%"
-					}}>
-						<img height="auto" width="100px" src="https://media.tenor.com/azaqzpGX2-kAAAAi/strawberry-fruit.gif"></img>
-						<span>Нет данных</span>
-					</div>
-				</Div>
-			}
+			<GroupListContent
+				hasGroupsAccess={hasGroupsAccess}
+				isLoading={isLoading}
+				setHasGroupsAccess={setHasGroupsAccess}
+				setCurrentPage={setCurrentPage}
+				groups={groups}
+				handleGenerate={handleGenerate}
+			/>
 		</Group>
 	)
 }
