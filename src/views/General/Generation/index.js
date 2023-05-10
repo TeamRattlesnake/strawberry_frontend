@@ -202,7 +202,7 @@ const GenerationPage = ({ id, go, dataset}) => {
     }
 
     const handlePostPublish = () => {
-        StrawberryBackend.postPublish(textId)
+        StrawberryBackend.postSetPublished(textId)
     }
 
     const handleExecute = () => {

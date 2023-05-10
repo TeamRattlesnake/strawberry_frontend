@@ -9,15 +9,15 @@ const PublishBox = ({groupId, text, showSnackBar, onPostPublish}) => {
     const [publishDate, setPublishDate] = useState(() => new Date());
     const handlePublish = () => {
         let payload = {
-            from_group: fromGroup,
+            from_group: fromGroup ? 1 : 0,
         }
         if (usePublishDate) {
             payload['publish_date'] = Math.floor(publishDate.getTime() / 1000)
         }
-        StrawberryBackend.publishPost(groupId, text, payload)
+        StrawberryBackend.postPublish(groupId, text, payload)
         .then((status) => {
             switch (status) {
-                case 0:
+                case 0: // пользователь нажал кнопку "Разместить запись"
                     showSnackBar({
                         text: usePublishDate ?
                         "Ура, в скором времени запись будет опубликована!"
@@ -25,10 +25,10 @@ const PublishBox = ({groupId, text, showSnackBar, onPostPublish}) => {
                         "Ура, запись успешно опубликована!",
                         type: "success"});
                     break;
-                case 3:
-                    showSnackBar({text: "Передумали?", type: "danger"});
+                case 3: // пользователь отменил процесс публикации
+                    showSnackBar({text: "Передумали?", type: "info"});
                     break;
-                default:
+                default: // при публикации произошла необработанная ошибка
                     showSnackBar({text: "Ошибка при публикации записи", type: "danger"});
                     break;
             }

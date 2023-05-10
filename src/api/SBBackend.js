@@ -82,7 +82,7 @@ class StrawberryBackend {
         })
     }
 
-    static async postPublish(resultId) {
+    static async postSetPublished(resultId) {
         return API.makeRequest({
             method: "POST",
             url: `post/${resultId}/publish`,
@@ -171,7 +171,7 @@ class StrawberryBackend {
         })
     }
 
-    static async publishPost(groupId, text, options) {
+    static async postPublish(groupId, text, options) {
         // опубликовать в группе
         return bridge.send('VKWebAppShowWallPostBox', {
             owner_id: -groupId,
@@ -262,7 +262,7 @@ class StrawberryBackend {
         const defaultResp = {count: 0, items: []};
         return API.makeRequest({
             method: "GET",
-            url: "stats/history",
+            url: "posts",
             params: {
                 group_id: groupId,
                 limit: count,
