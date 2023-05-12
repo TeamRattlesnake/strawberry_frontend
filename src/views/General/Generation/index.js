@@ -20,15 +20,17 @@ function delay(ms) {
 
 const executeWrapper = (execute) => {
     return async function() {
-        const textId = await execute.apply(this, arguments)
+        const data = await execute.apply(this, arguments);
+        if (data.status === 7) return {status: 2};
+        const textId = data.text_id;
         while (textId) {
             const ok = await StrawberryBackend.getGenStatus(textId);
             if (ok === null) {
-                return ok;
+                return {status: 1};
             }
             if (ok) {
                 const res = await StrawberryBackend.getGenResult(textId);
-                return {text: res, id: textId}
+                return {status: 0, text: res, id: textId}
             }
             await delay(1000);
         }
@@ -229,7 +231,18 @@ const GenerationPage = ({ id, go, dataset}) => {
         setTimeTarget(new Date().getTime() / 1000 + timeTotal);
         setIsLoading(true);
         service.execute(group.id, group.texts, text)
-        .then(({text, id}) => {
+        .then((data) => {
+            switch (data?.status) {
+                case 0:
+                    break;
+                case 2:
+                    dataset.showSnackBar({text: "Слишком много запросов на генерацию! Попробуйте позже.", type: "danger"});
+                    return;
+                default:
+                    dataset.showSnackBar({text: "При генерации контента произошла ошибка", type: "danger"});
+                    return;
+            }
+            const {text, id} = data;
             if (text === null) {
                 dataset.showSnackBar({text: "При генерации контента произошла ошибка", type: "danger"});
                 return

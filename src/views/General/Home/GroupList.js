@@ -83,8 +83,8 @@ const GroupListContent = ({groups, handleGenerate, showGroups, setShowGroups, is
 			actions={<Button onClick={() => setShowGroups(true)}>Разрешить</Button>}
 		/>
 	);
-	if (!showGroups) return accessFallback;
 	if (isLoading) return (<Div><Spinner/></Div>);
+	if (!showGroups) return accessFallback;
 	return (
 		(!groups || groups.length === 0) ?
 		(
@@ -113,7 +113,7 @@ const GroupListContent = ({groups, handleGenerate, showGroups, setShowGroups, is
 
 const GroupList = ({ go, dataset }) => {
 	const [groupsData, setGroupsData] = useState({
-		loading: false,
+		loading: true,
 		items: [],
 	});
 	const [filterMode, setFilterMode] = useState(FilterMode.ALL);
@@ -127,9 +127,14 @@ const GroupList = ({ go, dataset }) => {
 
 	const router = useRouter();
 
+	useEffect(() => {
+		showGroups && setGroupsData((prev) => ({...prev, loading: false}));
+	}, [showGroups]);
+	
 	const updateShowGroups = (onPostUpdate) => { // обновить условие отображение плашки о разрешениях
 		StrawberryBackend.hasScope(targetScope)
 		.then((ok) => {
+			!ok && setGroupsData((prev) => ({...prev, loading: false}));
 			setShowGroups(ok);
 		})
 		.finally(() => {

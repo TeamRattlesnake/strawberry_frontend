@@ -12,8 +12,9 @@ export const GenerationMethod = {
 };
 
 class StrawberryBackend {
-    static isOK(response) {
-        return response.status === 200 && response.data?.status === 0
+
+    static isOK(response, isSoft = false) {
+        return response.status === 200 && (isSoft || (!isSoft && response.data?.status === 0))
     }
 
     static getData(response) {
@@ -136,13 +137,16 @@ class StrawberryBackend {
             }
         })
         .then((resp) => {
-            if (StrawberryBackend.isOK(resp)) {
-                return StrawberryBackend.getData(resp)?.text_id;
+            if (!StrawberryBackend.isOK(resp, true)) return {};
+            console.log(resp.data);
+            return {
+                status: resp.data?.status,
+                text_id: StrawberryBackend.getData(resp)?.text_id,
             }
         })
         .catch((error) => {
             console.log(error);
-            return false;
+            return {};
         })
     }
 
@@ -171,7 +175,7 @@ class StrawberryBackend {
         })
     }
 
-    static async postPublish(groupId, text, options) {
+    static async postPublish(groupId, text, options, showPost = true) {
         // опубликовать в группе
         return bridge.send('VKWebAppShowWallPostBox', {
             owner_id: -groupId,
@@ -179,7 +183,9 @@ class StrawberryBackend {
             ...options
         })
         .then((data) => {
-            return data.post_id ? 0 : 1;
+            if (!data.post_id) return 1;
+            bridge.send("VKWebAppOpenWallPost", {"owner_id": -groupId, "post_id": data.post_id}); // показать пост
+            return 0;
         })
         .catch((error) => {
             if (error?.error_data?.error_code === 10007) return 3;
