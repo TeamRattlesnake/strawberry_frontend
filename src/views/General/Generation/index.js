@@ -1,7 +1,7 @@
 import {Avatar, Button, Div, FormItem, Group, Panel, PanelHeader, PanelHeaderBack, PanelHeaderContent, Progress, Separator, SplitCol, SplitLayout, Textarea, usePlatform } from "@vkontakte/vkui";
 import React, {useEffect, useState} from "react";
 
-import { Icon24Fullscreen, Icon24FullscreenExit, Icon24Switch, Icon24WriteOutline } from '@vkontakte/icons';
+import { Icon24Fullscreen, Icon24FullscreenExit, Icon24MagicWandOutline, Icon24Switch, Icon24WriteOutline } from '@vkontakte/icons';
 import { Icon24ArrowRightCircleOutline } from '@vkontakte/icons';
 import { Icon24Shuffle } from '@vkontakte/icons';
 
@@ -45,13 +45,13 @@ export const FeedbackType = {
 export const Service = {
     TEXTGEN_THEME: {
         id: "textgen_theme",
-        alias: "Создать текст с нуля по заданной теме",
+        alias: "Создать текст по заданной теме",
         textarea_top: "Тема (краткое описание) текста:",
         placeholder: "Ваша тема для текста (о чем он будет?)",
         button_name: "Создать текст",
         icon: <Icon24WriteOutline/>,
         execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.GENERATE_TEXT, ...args)),
-        hint: "В этом режиме можно с использованием вашего краткого описания текста (темы) создать текст побольше! Попробуйте ввести тему текста и создать что-то новое."
+        hint: "В этом режиме можно на основе предоставленной вами темы создать соответствующий текст! Попробуйте ввести тему текста и создать что-то новое."
     },
     TEXTGEN: {
         id: "text_gen",
@@ -102,6 +102,18 @@ export const Service = {
         icon: <Icon24Fullscreen/>,
         execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.EXTEND_TEXT, ...args)),
         hint: "Если вам захотелось увеличить уже существующий текст, добавив в него воды, тот этот режим для вас. Данный режим позволяет увеличить общий объем текста, при это сохранив его исходный смысл.",
+    },
+    SCRATCH: {
+        id: "scratch",
+        alias: "Создать текст с нуля",
+        textarea_top: "",
+        placeholder: "",
+        button_name: "Создать с нуля",
+        icon: <Icon24MagicWandOutline/>,
+        execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.SCRATCH, ...args)),
+        hint: "Данный режим позволяет создать текст, основываясь только на контексте сообщества. Вам даже не нужно вводить какой-либо текст!",
+        allow_generate: (text) => (!text),
+        no_input: true,
     }
 };
 
@@ -117,9 +129,9 @@ const GenerationPage = ({ id, go, dataset}) => {
 
     const router = useRouter();
 
-    const [serviceKeyDefault, serviceItemDefault] = Object.entries(Service)[0]
+    const serviceKeyDefault = Object.keys(Service)[0]
     const [serviceKey, setServiceKey] = useState(serviceKeyDefault);
-    const [service, setService] = useState(serviceItemDefault);
+    const service = Service[serviceKey];
     const [text, setText] = useState("");
     const [postId, setPostId] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -127,6 +139,14 @@ const GenerationPage = ({ id, go, dataset}) => {
     const [progressPercent, setProgressPercent] = useState(0);
     const timeTotal = 90; // 2 mins
     const [posts, setPosts] = useState([]);
+
+    const getServiceStorage = (serviceKey) => {
+        const data = JSON.parse(localStorage.getItem("sb_service_data"));
+        const serviceData = data?.[serviceKey] ? {...serviceStorageDefault, ...data?.[serviceKey]} : serviceStorageDefault;
+        return serviceData;
+    }
+
+    const [serviceData, setServiceData] = useState(getServiceStorage(serviceKey));
 
     useEffect(() => {
         if (isLoading) {
@@ -139,14 +159,6 @@ const GenerationPage = ({ id, go, dataset}) => {
             setProgressPercent(100);
         }
     }, [isLoading])
-
-    const getServiceStorage = (serviceKey) => {
-        const data = JSON.parse(localStorage.getItem("sb_service_data"));
-        const serviceData = data?.[serviceKey] ? {...serviceStorageDefault, ...data?.[serviceKey]} : serviceStorageDefault;
-        return serviceData;
-    }
-
-    const [serviceData, setServiceData] = useState(getServiceStorage(serviceKey));
 
     const saveServiceStorage = (serviceKey, data) => {
         const oldData = JSON.parse(localStorage.getItem("sb_service_data"));
@@ -223,7 +235,6 @@ const GenerationPage = ({ id, go, dataset}) => {
 
     const handleServiceClick = (e) => {
         setServiceKey(e.target.value);
-        setService(Service[e.target.value]);
         setServiceData(getServiceStorage(e.target.value));
     }
 
@@ -267,6 +278,13 @@ const GenerationPage = ({ id, go, dataset}) => {
         .finally(() => setIsLoading(false));
     }
 
+    const handleEditPost = (post) => {
+        const text = post.text;
+        const id = post.post_id;
+        setPostId(id);
+        setText(text);
+    }
+
     return (
         <Panel id={id}>
             <PanelHeader
@@ -286,7 +304,12 @@ const GenerationPage = ({ id, go, dataset}) => {
                         <Div>
                             <ServiceList
                                 activeServiceKey={serviceKey}
-                                onServiceClick={handleServiceClick}    
+                                onServiceClick={handleServiceClick}
+                                options={
+                                    Object.entries(Service)
+                                    //.filter(([key, _]) => ((text && key !== "SCRATCH") || !text))
+                                    .map(([key, item]) => ({label: item.alias, value: key, ...item}))
+                                }
                             />
                         </Div>
                         {
@@ -297,16 +320,19 @@ const GenerationPage = ({ id, go, dataset}) => {
                                 }}/>
                             </Div>
                         }
-                        <Div>
-                            <FormItem top={service.textarea_top}>
-                                <Textarea
-                                    rows={7}
-                                    value={text}
-                                    placeholder={service.placeholder}
-                                    onChange={handleTextChange}
-                                />
-                            </FormItem>
-                        </Div>
+                        {
+                            (!service.no_input || (service.no_input && text)) &&
+                            <Div>
+                                <FormItem top={service.textarea_top}>
+                                    <Textarea
+                                        rows={7}
+                                        value={text}
+                                        placeholder={service.placeholder}
+                                        onChange={handleTextChange}
+                                    />
+                                </FormItem>
+                            </Div>
+                        }
                         <Div>
                             <Progress aria-labelledby="progresslabel" value={progressPercent} />
                         </Div>
@@ -316,7 +342,11 @@ const GenerationPage = ({ id, go, dataset}) => {
                                     stretched
                                     loading={isLoading}
                                     onClick={handleExecute}
-                                    disabled={!text || text.length === 0}
+                                    disabled={
+                                        (service.allow_generate && !service.allow_generate(text))
+                                        ||
+                                        (!service.allow_generate && (!text || text.length === 0))
+                                    }
                                 >
                                     {service.button_name}
                                 </Button>
@@ -340,6 +370,7 @@ const GenerationPage = ({ id, go, dataset}) => {
                     <PostHistory
                         onFeedback={handleFeedback}
                         onRecover={handleRecover}
+                        onEditPost={handleEditPost}
                         posts={posts}
                         updateHistory={updateHistory}
                     />

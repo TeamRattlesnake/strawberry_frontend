@@ -1,5 +1,5 @@
 import { Icon56RecentOutline } from "@vkontakte/icons";
-import { Button, ButtonGroup, Card, CardScroll, Div, FormItem, Group, Header, Separator, Textarea } from "@vkontakte/vkui";
+import { Button, ButtonGroup, Card, CardScroll, Div, FormItem, Group, Header, Separator, Textarea, usePlatform } from "@vkontakte/vkui";
 import { useEffect, useState } from "react";
 
 import moment from 'moment-timezone';
@@ -10,11 +10,12 @@ import styles from "./PostHistory.module.css";
 moment.locale('ru');
 
 
-const PostHistory = ({onFeedback, onRecover, posts, updateHistory}) => {
+const PostHistory = ({onFeedback, onRecover, onEditPost, posts, updateHistory}) => {
     useEffect(() => {
         updateHistory()
     }, []);
     const [recoverablePosts, setRecoverablePosts] = useState([]);
+    console.log(usePlatform());
     return (
         <Group header={<Header>История запросов</Header>}>
             <Div>
@@ -22,7 +23,7 @@ const PostHistory = ({onFeedback, onRecover, posts, updateHistory}) => {
                     posts && posts.length > 0
                     ?
                     <CardScroll
-                        size="s"
+                        size={(usePlatform() === "ios" || usePlatform() === "android") ? "l" : "s"}
                     >
                         {
                             posts.map((post) => {
@@ -34,6 +35,9 @@ const PostHistory = ({onFeedback, onRecover, posts, updateHistory}) => {
                                 }
                                 const onGoodResult = () => {
                                     onFeedback(post.post_id, FeedbackType.LIKE);
+                                }
+                                const onEdit = () => {
+                                    onEditPost(post);
                                 }
                                 return (
                                     <Card
@@ -92,6 +96,14 @@ const PostHistory = ({onFeedback, onRecover, posts, updateHistory}) => {
                                                         after={post.rating > 0 && '+1'}
                                                     >👍</Button>
                                                 </ButtonGroup>
+                                            </Div>
+                                            <Div>
+                                                <Button
+                                                    stretched
+                                                    onClick={onEdit}
+                                                >
+                                                    Редактировать
+                                                </Button>
                                             </Div>
                                         </div>
                                     </Card>

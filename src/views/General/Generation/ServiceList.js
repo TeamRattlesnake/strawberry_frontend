@@ -1,8 +1,7 @@
 import { CustomSelectOption, FormItem, Select } from "@vkontakte/vkui"
-import { Service } from "."
 
 
-const ServiceList = ({activeServiceKey, onServiceClick}) => {
+const ServiceList = ({activeServiceKey, onServiceClick, options}) => {
     const renderItem = ({option, ...restProps}) => {
         return (
             <CustomSelectOption
@@ -17,9 +16,7 @@ const ServiceList = ({activeServiceKey, onServiceClick}) => {
             <Select
                 value={activeServiceKey}
                 onChange={onServiceClick}
-                options={Object.entries(Service).map(([key, item]) => ({
-                    label: item.alias, value: key, ...item
-                }))}
+                options={options}
                 renderOption={renderItem}
             />
         </FormItem>

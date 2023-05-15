@@ -9,6 +9,7 @@ export const GenerationMethod = {
     EXTEND_TEXT: 'extend_text',
     REPHRASE_TEXT: 'rephrase_text',
     UNMASK_TEXT: 'unmask_text',
+    SCRATCH: "gen_from_scratch",
 };
 
 class StrawberryBackend {
