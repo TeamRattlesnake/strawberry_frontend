@@ -355,16 +355,16 @@ const GenerationPage = ({ id, go, dataset}) => {
                                 </Button>
                             }
                         </Div>
-                        <Div>
-                            <MediaBox
-                                uploadedFiles={uploadedFiles}
-                                setUploadedFiles={setUploadedFiles}
-                            />
-                        </Div>
                         {
                             group?.is_admin === 1 &&
                             (
                                 <>
+                                    <Div>
+                                        <MediaBox
+                                            uploadedFiles={uploadedFiles}
+                                            setUploadedFiles={setUploadedFiles}
+                                        />
+                                    </Div>
                                     <Separator/>
                                     <PublishBox
                                         groupId={group?.id}

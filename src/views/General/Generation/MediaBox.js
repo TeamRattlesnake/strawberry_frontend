@@ -12,6 +12,8 @@ const PHOTO_TYPES = [
     'image/png',
     'image/jpeg',
     'image/gif',
+    'image/webp',
+    'image/heic',
 ];
 
 const MediaType = {
