@@ -124,7 +124,7 @@ const MediaBox = ({uploadedFiles, setUploadedFiles}) => {
                                                 }}>
                                                     <Image
                                                         key={id}
-                                                        size={75}
+                                                        size={100}
                                                         src={src}
                                                         fallbackIcon={<Icon24Document/>}
                                                     />
