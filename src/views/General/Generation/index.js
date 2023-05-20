@@ -12,6 +12,7 @@ import PostHistory from "./PostHistory";
 import ServiceList from "./ServiceList";
 import PublishBox from "./PublishBox";
 import { useLocation, useRouter } from "@happysanta/router";
+import MediaBox from "./MediaBox";
 
 
 function delay(ms) {
@@ -137,8 +138,10 @@ const GenerationPage = ({ id, go, dataset}) => {
     const [isLoading, setIsLoading] = useState(false);
     const [timeTarget, setTimeTarget] = useState(null);
     const [progressPercent, setProgressPercent] = useState(0);
-    const timeTotal = 90; // 2 mins
+    const timeTotal = 15; // секунд
     const [posts, setPosts] = useState([]);
+
+    const [uploadedFiles, setUploadedFiles] = useState([]);
 
     const getServiceStorage = (serviceKey) => {
         const data = JSON.parse(localStorage.getItem("sb_service_data"));
@@ -352,6 +355,12 @@ const GenerationPage = ({ id, go, dataset}) => {
                                 </Button>
                             }
                         </Div>
+                        <Div>
+                            <MediaBox
+                                uploadedFiles={uploadedFiles}
+                                setUploadedFiles={setUploadedFiles}
+                            />
+                        </Div>
                         {
                             group?.is_admin === 1 &&
                             (
@@ -362,6 +371,8 @@ const GenerationPage = ({ id, go, dataset}) => {
                                         postId={postId}
                                         text={text}
                                         showSnackBar={dataset.showSnackBar}
+                                        attachments={uploadedFiles}
+                                        setAttachments={setUploadedFiles}
                                     />
                                 </>
                             )

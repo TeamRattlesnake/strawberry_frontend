@@ -3,7 +3,7 @@ import StrawberryBackend from "../../../api/SBBackend";
 import { Button, Checkbox, DateInput, Div, FormItem, Group } from "@vkontakte/vkui";
 
 
-const PublishBox = ({groupId, postId, text, showSnackBar, onPostPublish}) => {
+const PublishBox = ({groupId, postId, text, showSnackBar, onPostPublish, attachments, setAttachments}) => {
     const [fromGroup, setFromGroup] = useState(true);
     const [usePublishDate, setUsePublishDate] = useState(false);
     const [publishDate, setPublishDate] = useState(() => new Date());
@@ -11,6 +11,7 @@ const PublishBox = ({groupId, postId, text, showSnackBar, onPostPublish}) => {
         let payload = {
             from_group: fromGroup ? 1 : 0, // от имени группы или нет
             signed: fromGroup ? 0 : 1, // подпись снизу
+            attachments: attachments.map((attachment) => `${attachment.type}${attachment.owner_id}_${attachment.id}`).join(',')
         }
         if (usePublishDate) {
             payload['publish_date'] = Math.floor(publishDate.getTime() / 1000)
@@ -36,6 +37,7 @@ const PublishBox = ({groupId, postId, text, showSnackBar, onPostPublish}) => {
                     break;
             }
         })
+        .finally(() => setAttachments([]));
     }
     return (
         <Group mode="plain">

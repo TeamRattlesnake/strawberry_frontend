@@ -364,6 +364,17 @@ class StrawberryBackend {
         })
     }
     */
+
+    static async uploadFile(uploadUrl, file) {
+        const formData = new FormData();
+        formData.append("upload_url", uploadUrl);
+        formData.append("file", file);
+        return API.makeRequest({
+            method: 'POST',
+            url: 'files/upload',
+            data: formData
+        })
+    }
 }
 
 export default StrawberryBackend;
