@@ -69,7 +69,7 @@ const MediaBox = ({uploadedFiles, setUploadedFiles}) => {
                             owner_id = res.response[0].owner_id;
                             id = res.response[0].id;
                             type = MediaType.PHOTO;
-                            src = res.response[0].sizes[1].url;
+                            src = res.response[0].sizes[2].url;
                             title = file.name;
                         } else {
                             owner_id = res.response.doc.owner_id;
@@ -117,7 +117,7 @@ const MediaBox = ({uploadedFiles, setUploadedFiles}) => {
                                                 <div
                                                     className={styles.card_child}
                                                     style={{
-                                                        marginTop: '10%',
+                                                        marginTop: '15%',
                                                         position: 'relative',
                                                     }}
                                                 >
@@ -140,6 +140,7 @@ const MediaBox = ({uploadedFiles, setUploadedFiles}) => {
                                                     style={{
                                                         overflow: 'hidden',
                                                         whiteSpace: 'nowrap',
+                                                        width: '5rem',
                                                     }}
                                                 >
                                                     <span className={styles.attachment_title}>{title}</span>
