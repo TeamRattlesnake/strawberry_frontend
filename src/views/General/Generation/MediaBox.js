@@ -1,7 +1,7 @@
-import { CardScroll, File, FormItem, usePlatform, Image, Card, Div, Text, Spinner } from "@vkontakte/vkui"
+import { CardScroll, File, usePlatform, Image, Card, Div, Text, Spinner, Button } from "@vkontakte/vkui"
 
 import styles from "./MediaBox.module.css";
-import { Icon24Document, Icon56AddCircleOutline } from '@vkontakte/icons';
+import { Icon12Cancel, Icon24Document, Icon36Add } from '@vkontakte/icons';
 
 import bridge from '@vkontakte/vk-bridge';
 import StrawberryBackend from "../../../api/SBBackend";
@@ -22,6 +22,8 @@ const MediaType = {
 const MediaBox = ({uploadedFiles, setUploadedFiles}) => {
     
     const [isUploading, setIsUploading] = useState(false);
+
+    const isMobile = usePlatform() === 'ios' || usePlatform() === 'android';
 
     const handleFilesChange = (e) => {
         if (!e.target.files?.length > 0) return;
@@ -92,18 +94,21 @@ const MediaBox = ({uploadedFiles, setUploadedFiles}) => {
     }
 
     return (
-        <div className={styles.container}>
+        <div className={styles.container} style={{
+            flexDirection: isMobile ? 'column' : 'row',
+        }}>
             {
                 uploadedFiles && uploadedFiles.length > 0 ?
                 (
                     <CardScroll
                         size={false}
+                        className={styles.card_scroll_container}
                         style={{
-                            flex: 1,
+                            width: isMobile ? '100%' : '80%',
                         }}
                     >
                         {
-                            uploadedFiles.map((file) => 
+                            uploadedFiles.map((file, idx) => 
                                 {
                                     let {id, src, title} = file;
                                     const maxTitleSize = 15;
@@ -115,12 +120,20 @@ const MediaBox = ({uploadedFiles, setUploadedFiles}) => {
                                             <div className={styles.card_container}>
                                                 <Div style={{
                                                     marginTop: '5%',
+                                                    position: 'relative',
                                                 }}>
                                                     <Image
                                                         key={id}
                                                         size={75}
                                                         src={src}
                                                         fallbackIcon={<Icon24Document/>}
+                                                    />
+                                                    <Button
+                                                        size="s"
+                                                        appearance="negative"
+                                                        before={<Icon12Cancel/>}
+                                                        className={styles.remove_button}
+                                                        onClick={() => setUploadedFiles((pred) => [...pred.slice(0, idx), ...pred.slice(idx+1,)])}
                                                     />
                                                 </Div>
                                                 <Div style={{
@@ -142,25 +155,27 @@ const MediaBox = ({uploadedFiles, setUploadedFiles}) => {
                         style={{
                             marginRight: 'auto',
                             marginLeft: 'auto',
+                            marginTop: '2rem',
+                            marginBottom: '2rem',
                         }}
                     >
                         Нет вложений
                     </Text>
                 )
             }
-            <FormItem className={styles.upload_container}>
-                <File
-                    size="m"
-                    //accept="image/png, image/jpeg"
-                    onChange={handleFilesChange}
-                    style={{
-                        height: '100%'
-                    }}
-                    disabled={isUploading}
-                >
-                    {isUploading ? <Div style={{ marginLeft: 'auto', marginRight: 'auto'}}><Spinner size="medium"/></Div> : <Icon56AddCircleOutline role="presentation"/>}
-                </File>
-            </FormItem>
+            <File
+                size="m"
+                //accept="image/png, image/jpeg"
+                onChange={handleFilesChange}
+                className={styles.upload_container}
+                style={{
+                    width: isMobile ? '100%' : '20%',
+                    borderRadius: isMobile ? 'none !important' : 'inherit',
+                }}
+                disabled={isUploading}
+            >
+                <Div style={{ marginLeft: 'auto', marginRight: 'auto'}}>{isUploading ? <Spinner size="medium"/> : <Icon36Add role="presentation"/>}</Div>
+            </File>
         </div>
     )
 }

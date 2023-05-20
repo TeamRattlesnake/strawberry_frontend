@@ -1,6 +1,6 @@
 import { useState } from "react";
 import StrawberryBackend from "../../../api/SBBackend";
-import { Button, Checkbox, DateInput, Div, FormItem, Group } from "@vkontakte/vkui";
+import { Button, Checkbox, DateInput, Div, FormItem, Group, Headline } from "@vkontakte/vkui";
 
 
 const PublishBox = ({groupId, postId, text, showSnackBar, onPostPublish, attachments, setAttachments}) => {
@@ -74,7 +74,7 @@ const PublishBox = ({groupId, postId, text, showSnackBar, onPostPublish, attachm
                     onClick={handlePublish}
                     disabled={!text || text.length === 0 || postId === undefined || postId === null}
                 >
-                    Опубликовать
+                    <Headline>Опубликовать</Headline>
                 </Button>
             </Div>
         </Group>

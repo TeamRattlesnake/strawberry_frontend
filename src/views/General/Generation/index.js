@@ -1,4 +1,4 @@
-import {Avatar, Button, Div, FormItem, Group, Panel, PanelHeader, PanelHeaderBack, PanelHeaderContent, Progress, Separator, SplitCol, SplitLayout, Textarea, usePlatform } from "@vkontakte/vkui";
+import {Avatar, Button, Div, FormItem, Group, Headline, Panel, PanelHeader, PanelHeaderBack, PanelHeaderContent, Progress, Separator, SplitCol, SplitLayout, Textarea, usePlatform } from "@vkontakte/vkui";
 import React, {useEffect, useState} from "react";
 
 import { Icon24Fullscreen, Icon24FullscreenExit, Icon24MagicWandOutline, Icon24Switch, Icon24WriteOutline } from '@vkontakte/icons';
@@ -351,7 +351,7 @@ const GenerationPage = ({ id, go, dataset}) => {
                                         (!service.allow_generate && (!text || text.length === 0))
                                     }
                                 >
-                                    {service.button_name}
+                                    <Headline>{service.button_name}</Headline>
                                 </Button>
                             }
                         </Div>
