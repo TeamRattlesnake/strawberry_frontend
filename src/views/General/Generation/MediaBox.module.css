@@ -39,13 +39,31 @@
     margin: auto;
 }
 
+.card_child {
+    margin: var(--vkui--size_base_padding_vertical--regular) var(--vkui--size_base_padding_horizontal--regular);
+}
+
 .remove_button {
     position: absolute;
     right: 0;
     top: 0;
+    translate: 50% -50%;
 }
 
 .photo_preview {
     height: 100%;
     aspect-ratio: 1;
+}
+
+.attachment_title {
+    display: block; /* Important to give the content a width */
+    width: 100%;
+    transform: translateX(100%); /* Animation start out of the screen */
+    /* Add the animation */
+    animation: move 5s linear infinite /* infinite make reapeat the animation indefinitely */;
+}
+
+/* Create the animation */
+@keyframes move {
+    to { transform: translateX(-100%); }
 }

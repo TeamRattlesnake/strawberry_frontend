@@ -111,17 +111,16 @@ const MediaBox = ({uploadedFiles, setUploadedFiles}) => {
                             uploadedFiles.map((file, idx) => 
                                 {
                                     let {id, src, title} = file;
-                                    const maxTitleSize = 15;
-                                    if (title && title.length > maxTitleSize) {
-                                        title = title.slice(0, maxTitleSize) + "...";
-                                    }
                                     return (
                                         <Card>
                                             <div className={styles.card_container}>
-                                                <Div style={{
-                                                    marginTop: '5%',
-                                                    position: 'relative',
-                                                }}>
+                                                <div
+                                                    className={styles.card_child}
+                                                    style={{
+                                                        marginTop: '10%',
+                                                        position: 'relative',
+                                                    }}
+                                                >
                                                     <Image
                                                         key={id}
                                                         size={100}
@@ -135,12 +134,16 @@ const MediaBox = ({uploadedFiles, setUploadedFiles}) => {
                                                         className={styles.remove_button}
                                                         onClick={() => setUploadedFiles((pred) => [...pred.slice(0, idx), ...pred.slice(idx+1,)])}
                                                     />
-                                                </Div>
-                                                <Div style={{
-                                                    margin: '5%',
-                                                    overflow: 'hidden',
-                                                    whiteSpace: 'nowrap',
-                                                }}>{title}</Div>
+                                                </div>
+                                                <div
+                                                    className={styles.card_child}
+                                                    style={{
+                                                        overflow: 'hidden',
+                                                        whiteSpace: 'nowrap',
+                                                    }}
+                                                >
+                                                    <span className={styles.attachment_title}>{title}</span>
+                                                </div>
                                             </div>
                                         </Card>
                                     )

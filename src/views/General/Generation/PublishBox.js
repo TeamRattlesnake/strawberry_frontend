@@ -28,6 +28,7 @@ const PublishBox = ({groupId, postId, text, showSnackBar, onPostPublish, attachm
                         type: "success"});
                     StrawberryBackend.postSetPublished(postId); // отправляем информацию о том что пост был опубликован
                     onPostPublish && onPostPublish({postId});
+                    setAttachments([]);
                     break;
                 case 3: // пользователь отменил процесс публикации
                     showSnackBar({text: "Передумали?", type: "info"});
@@ -37,7 +38,6 @@ const PublishBox = ({groupId, postId, text, showSnackBar, onPostPublish, attachm
                     break;
             }
         })
-        .finally(() => setAttachments([]));
     }
     return (
         <Group mode="plain">
