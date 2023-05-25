@@ -1,0 +1,3 @@
+.button_patch > span > span {
+    padding-left: 0 !important;
+}

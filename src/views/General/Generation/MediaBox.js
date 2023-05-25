@@ -175,7 +175,7 @@ const MediaBox = ({uploadedFiles, setUploadedFiles}) => {
                 onChange={handleFilesChange}
                 className={styles.upload_container}
                 style={{
-                    width: isMobile ? '100%' : '20%',
+                    width: isMobile ? '100%' : 'auto',
                     borderRadius: isMobile ? 'none !important' : 'inherit',
                 }}
                 disabled={isUploading}

@@ -10,6 +10,7 @@ export const GenerationMethod = {
     REPHRASE_TEXT: 'rephrase_text',
     UNMASK_TEXT: 'unmask_text',
     SCRATCH: "gen_from_scratch",
+    FIX_GRAMMAR: "fix_grammar",
 };
 
 class StrawberryBackend {
@@ -185,7 +186,7 @@ class StrawberryBackend {
         })
         .then((data) => {
             if (!data.post_id) return 1;
-            bridge.send("VKWebAppOpenWallPost", {"owner_id": -groupId, "post_id": data.post_id}); // показать пост
+            showPost && bridge.send("VKWebAppOpenWallPost", {"owner_id": -groupId, "post_id": data.post_id}); // показать пост
             return 0;
         })
         .catch((error) => {

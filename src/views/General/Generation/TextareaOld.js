@@ -1,4 +1,5 @@
 import { Spinner, Textarea } from "@vkontakte/vkui";
+import { RichTextarea } from "rich-textarea";
 
 
 const TextareaDropdown = ({isLoading, items, onClick, onClose, position}) => {
@@ -98,4 +99,22 @@ onItemClick={
 }
 */
 
-export default TextareaCustom;
+
+const RichTextareaWrapper = (...props) => {
+    return (
+        <RichTextarea
+            {...props}
+        >
+            {(v) => {
+                console.log(v);
+                return v && v.split("").map((t, i) => (
+                    <span key={i} style={{ color: i % 2 === 0 ? "red" : undefined }}>
+                        {t}
+                    </span>
+                ));
+            }}
+        </RichTextarea>
+    )
+}
+
+export default RichTextareaWrapper;

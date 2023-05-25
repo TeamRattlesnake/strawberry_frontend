@@ -16,7 +16,7 @@ const PublishBox = ({groupId, postId, text, showSnackBar, onPostPublish, attachm
         if (usePublishDate) {
             payload['publish_date'] = Math.floor(publishDate.getTime() / 1000)
         }
-        StrawberryBackend.postPublish(groupId, text, payload)
+        StrawberryBackend.postPublish(groupId, text, payload, false)
         .then((status) => {
             switch (status) {
                 case 0: // пользователь нажал кнопку "Разместить запись"

@@ -1,7 +1,7 @@
 import {Avatar, Button, Div, FormItem, Group, Headline, Panel, PanelHeader, PanelHeaderBack, PanelHeaderContent, Progress, Separator, SplitCol, SplitLayout, Textarea, usePlatform } from "@vkontakte/vkui";
 import React, {useEffect, useState} from "react";
 
-import { Icon24Fullscreen, Icon24FullscreenExit, Icon24MagicWandOutline, Icon24Switch, Icon24WriteOutline } from '@vkontakte/icons';
+import { Icon24CheckBoxOn, Icon24Fullscreen, Icon24FullscreenExit, Icon24MagicWandOutline, Icon24Switch, Icon24WriteOutline } from '@vkontakte/icons';
 import { Icon24ArrowRightCircleOutline } from '@vkontakte/icons';
 import { Icon24Shuffle } from '@vkontakte/icons';
 
@@ -13,6 +13,7 @@ import ServiceList from "./ServiceList";
 import PublishBox from "./PublishBox";
 import { useLocation, useRouter } from "@happysanta/router";
 import MediaBox from "./MediaBox";
+import Editor from "./Editor";
 
 
 function delay(ms) {
@@ -54,56 +55,6 @@ export const Service = {
         execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.GENERATE_TEXT, ...args)),
         hint: "В этом режиме можно на основе предоставленной вами темы создать соответствующий текст! Попробуйте ввести тему текста и создать что-то новое."
     },
-    TEXTGEN: {
-        id: "text_gen",
-        alias: "Продолжить текст",
-        textarea_top: "Текст, который нужно продолжить:",
-        placeholder: "Текст, который вы хотите продолжить",
-        button_name: "Продолжить текст",
-        icon: <Icon24ArrowRightCircleOutline/>,
-        execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.APPEND_TEXT, ...args)),
-        hint: "В этом режиме можно продолжить введенный вами текст. Введите начало текста, который вы хотите написать, и мы его продолжим!"
-    },
-    REPHRASE: {
-        id: "rephrase",
-        alias: "Перефразировать текст",
-        textarea_top: "Текст, который нужно перефразировать:",
-        placeholder: "Текст, который вы хотите перефразировать",
-        button_name: "Перефразировать текст",
-        icon: <Icon24Switch/>,
-        execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.REPHRASE_TEXT, ...args)),
-        hint: "В этом режиме можно перефразировать текст. Введите текст, и мы его перепишем, сохранив при этом основной смысл!"
-    },
-    SUMMARIZE: {
-        id: "summarize",
-        alias: "Резюмировать текст",
-        textarea_top: "Текст, который нужно сократить:",
-        placeholder: "Большой текст, который нужно резюмировать (сократить)",
-        button_name: "Резюмировать текст",
-        icon: <Icon24FullscreenExit/>,
-        execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.SUMMARIZE_TEXT, ...args)),
-        hint: "В этом режиме можно сократить текст, оставив только самое главное, то есть сохранить основной смысл текста! Введите объемный текст, который нужно сократить, об остальном мы позаботимся сами."
-    },
-    BERT: {
-        id: "bert",
-        alias: "Заменить часть текста",
-        textarea_top: "Текст, в котором нужно заменить его часть:",
-        placeholder: "Текст, в котором нужно заменить его часть/части (обязательно с маской <MASK> в местах замены)",
-        button_name: "Заменить часть текста",
-        icon: <Icon24Shuffle/>,
-        execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.UNMASK_TEXT, ...args)),
-        hint: "В этом режиме можно заменить конкретные части текста (слово или слова) на максимально подходящие по смыслу! Чтобы указать место, где нужно выполнить замену, напишите \"<MASK>\". Мы постараемся заменить это ключевое слово на подходящее по смыслу."
-    },
-    EXTEND: {
-        id: "extend",
-        alias: "Добавить в текст воды",
-        textarea_top: "Текст, в который нужно добавить воды:",
-        placeholder: "Небольшой текст, объем которого нужно увеличить",
-        button_name: "Добавить воды",
-        icon: <Icon24Fullscreen/>,
-        execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.EXTEND_TEXT, ...args)),
-        hint: "Если вам захотелось увеличить уже существующий текст, добавив в него воды, тот этот режим для вас. Данный режим позволяет увеличить общий объем текста, при это сохранив его исходный смысл.",
-    },
     SCRATCH: {
         id: "scratch",
         alias: "Создать текст с нуля",
@@ -115,6 +66,66 @@ export const Service = {
         hint: "Данный режим позволяет создать текст, основываясь только на контексте сообщества. Вам даже не нужно вводить какой-либо текст!",
         allow_generate: (text) => (!text),
         no_input: true,
+    },
+    SUMMARIZE: {
+        id: "summarize",
+        alias: "Резюмировать текст",
+        textarea_top: "Текст, который нужно сократить:",
+        placeholder: "Большой текст, который нужно резюмировать (сократить)",
+        button_name: "Резюмировать текст",
+        icon: <Icon24FullscreenExit/>,
+        execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.SUMMARIZE_TEXT, ...args)),
+        hint: "В этом режиме можно сократить текст, оставив только самое главное, то есть сохранить основной смысл текста! Введите объемный текст, который нужно сократить, об остальном мы позаботимся сами."
+    },
+    EXTEND: {
+        id: "extend",
+        alias: "Добавить в текст воды",
+        textarea_top: "Текст, в который нужно добавить воды:",
+        placeholder: "Небольшой текст, объем которого нужно увеличить",
+        button_name: "Добавить воды",
+        icon: <Icon24Fullscreen/>,
+        execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.EXTEND_TEXT, ...args)),
+        hint: "Если вам захотелось увеличить уже существующий текст, добавив в него воды, тот этот режим для вас. Данный режим позволяет увеличить общий объем текста, при это сохранив его исходный смысл.",
+    },
+    REPHRASE: {
+        id: "rephrase",
+        alias: "Перефразировать текст",
+        textarea_top: "Текст, который нужно перефразировать:",
+        placeholder: "Текст, который вы хотите перефразировать",
+        button_name: "Перефразировать текст",
+        icon: <Icon24Switch/>,
+        execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.REPHRASE_TEXT, ...args)),
+        hint: "В этом режиме можно перефразировать текст. Введите текст, и мы его перепишем, сохранив при этом основной смысл!"
+    },
+    TEXTGEN: {
+        id: "text_gen",
+        alias: "Продолжить текст",
+        textarea_top: "Текст, который нужно продолжить:",
+        placeholder: "Текст, который вы хотите продолжить",
+        button_name: "Продолжить текст",
+        icon: <Icon24ArrowRightCircleOutline/>,
+        execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.APPEND_TEXT, ...args)),
+        hint: "В этом режиме можно продолжить введенный вами текст. Введите начало текста, который вы хотите написать, и мы его продолжим!"
+    },
+    BERT: {
+        id: "bert",
+        alias: "Заменить часть текста",
+        textarea_top: "Текст, в котором нужно заменить его часть:",
+        placeholder: "Текст, в котором нужно заменить его часть/части (обязательно с маской <MASK> в местах замены)",
+        button_name: "Заменить часть текста",
+        icon: <Icon24Shuffle/>,
+        execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.UNMASK_TEXT, ...args)),
+        hint: "В этом режиме можно заменить конкретные части текста (слово или слова) на максимально подходящие по смыслу! Чтобы указать место, где нужно выполнить замену, напишите \"<MASK>\". Мы постараемся заменить это ключевое слово на подходящее по смыслу."
+    },
+    FIX_GRAMMAR: {
+        id: "fix_grammar",
+        alias: "Исправить грамматику текста",
+        textarea_top: "Текст, грамматику которого нужно исправить:",
+        placeholder: "Текст, в котором нужно исправить орфографические ошибки",
+        button_name: "Исправить грамматику",
+        icon: <Icon24CheckBoxOn/>,
+        execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.FIX_GRAMMAR, ...args)),
+        hint: "В данном режиме вы можете исправить грамматические ошибки в своём тексте с помощью нейросети. Не забывайте проверять текст самостоятельно!",
     }
 };
 
@@ -241,10 +252,11 @@ const GenerationPage = ({ id, go, dataset}) => {
         setServiceData(getServiceStorage(e.target.value));
     }
 
-    const handleExecute = () => {
+    const executeTextWrapper = (exec) => {
+        return async (inputText) => {
         setTimeTarget(new Date().getTime() / 1000 + timeTotal);
         setIsLoading(true);
-        service.execute(group.id, group.texts, text)
+        return await exec(group.id, group.texts, inputText)
         .then((data) => {
             switch (data?.status) {
                 case 0:
@@ -261,7 +273,6 @@ const GenerationPage = ({ id, go, dataset}) => {
                 dataset.showSnackBar({text: "При генерации контента произошла ошибка", type: "danger"});
                 return
             }
-            setText(text);
             setPostId(id);
             updateHistory();
             Math.random() <= 0.3
@@ -273,12 +284,14 @@ const GenerationPage = ({ id, go, dataset}) => {
                 }),
                 3000
             );
+            return text;
         })
         .catch((error) => {
             console.log(error);
             dataset.showSnackBar({text: "Неизвестная ошибка :(", type: "danger"});
         })
         .finally(() => setIsLoading(false));
+    };
     }
 
     const handleEditPost = (post) => {
@@ -304,56 +317,34 @@ const GenerationPage = ({ id, go, dataset}) => {
             <SplitLayout>
                 <SplitCol>
                     <Group>
-                        <Div>
-                            <ServiceList
-                                activeServiceKey={serviceKey}
-                                onServiceClick={handleServiceClick}
-                                options={
-                                    Object.entries(Service)
-                                    //.filter(([key, _]) => ((text && key !== "SCRATCH") || !text))
-                                    .map(([key, item]) => ({label: item.alias, value: key, ...item}))
-                                }
-                            />
-                        </Div>
                         {
+                            /*
                             serviceData.showHint &&
                             <Div>
                                 <Hint text={service.hint} onClose={() => {
                                     saveServiceStorage(serviceKey, {showHint: false});
                                 }}/>
                             </Div>
+                            */
                         }
                         {
-                            (!service.no_input || (service.no_input && text)) &&
+                            //(!service.no_input || (service.no_input && text)) &&
                             <Div>
-                                <FormItem top={service.textarea_top}>
-                                    <Textarea
-                                        rows={7}
-                                        value={text}
-                                        placeholder={service.placeholder}
-                                        onChange={handleTextChange}
-                                    />
-                                </FormItem>
+                                <Editor
+                                    services={Object.values(Service)}
+                                    executeTextWrapper={executeTextWrapper}
+                                    rows={7}
+                                    text={text}
+                                    setText={setText}
+                                    //placeholder={service.placeholder}
+                                    //value={text}
+                                    //placeholder={service.placeholder}
+                                    //onChange={handleTextChange}
+                                />
                             </Div>
                         }
                         <Div>
                             <Progress aria-labelledby="progresslabel" value={progressPercent} />
-                        </Div>
-                        <Div>
-                            {
-                                <Button
-                                    stretched
-                                    loading={isLoading}
-                                    onClick={handleExecute}
-                                    disabled={
-                                        (service.allow_generate && !service.allow_generate(text))
-                                        ||
-                                        (!service.allow_generate && (!text || text.length === 0))
-                                    }
-                                >
-                                    <Headline>{service.button_name}</Headline>
-                                </Button>
-                            }
                         </Div>
                         {
                             group?.is_admin === 1 &&
