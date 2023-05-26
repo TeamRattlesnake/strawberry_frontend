@@ -1,138 +1,25 @@
-import {Avatar, Button, Div, FormItem, Group, Headline, Panel, PanelHeader, PanelHeaderBack, PanelHeaderContent, Progress, Separator, SplitCol, SplitLayout, Textarea, usePlatform } from "@vkontakte/vkui";
+import {Avatar, Div, Group, Panel, PanelHeader, PanelHeaderBack, PanelHeaderContent, Progress, Separator, SplitCol, SplitLayout } from "@vkontakte/vkui";
 import React, {useEffect, useState} from "react";
 
-import { Icon24CheckBoxOn, Icon24Fullscreen, Icon24FullscreenExit, Icon24MagicWandOutline, Icon24Switch, Icon24WriteOutline } from '@vkontakte/icons';
-import { Icon24ArrowRightCircleOutline } from '@vkontakte/icons';
-import { Icon24Shuffle } from '@vkontakte/icons';
+import StrawberryBackend from "../../../api/SBBackend";
 
-import StrawberryBackend, { GenerationMethod } from "../../../api/SBBackend";
-
-import Hint from "./Hint";
 import PostHistory from "./PostHistory";
-import ServiceList from "./ServiceList";
 import PublishBox from "./PublishBox";
 import { useLocation, useRouter } from "@happysanta/router";
 import MediaBox from "./MediaBox";
 import Editor from "./Editor";
 
+import Service from "../../../api/Service";
 
-function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms))
-}
-
-const executeWrapper = (execute) => {
-    return async function() {
-        const data = await execute.apply(this, arguments);
-        if (data.status === 7) return {status: 2};
-        const textId = data.text_id;
-        while (textId) {
-            const ok = await StrawberryBackend.getGenStatus(textId);
-            if (ok === null) {
-                return {status: 1};
-            }
-            if (ok) {
-                const res = await StrawberryBackend.getGenResult(textId);
-                return {status: 0, text: res, id: textId}
-            }
-            await delay(1000);
-        }
-    };
-}
 
 export const FeedbackType = {
     LIKE: 'like',
     DISLIKE: 'dislike',
 };
 
-export const Service = {
-    TEXTGEN_THEME: {
-        id: "textgen_theme",
-        alias: "Создать текст по заданной теме",
-        textarea_top: "Тема (краткое описание) текста:",
-        placeholder: "Ваша тема для текста (о чем он будет?)",
-        button_name: "Создать текст",
-        icon: <Icon24WriteOutline/>,
-        execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.GENERATE_TEXT, ...args)),
-        hint: "В этом режиме можно на основе предоставленной вами темы создать соответствующий текст! Попробуйте ввести тему текста и создать что-то новое."
-    },
-    SCRATCH: {
-        id: "scratch",
-        alias: "Создать текст с нуля",
-        textarea_top: "",
-        placeholder: "",
-        button_name: "Создать с нуля",
-        icon: <Icon24MagicWandOutline/>,
-        execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.SCRATCH, ...args)),
-        hint: "Данный режим позволяет создать текст, основываясь только на контексте сообщества. Вам даже не нужно вводить какой-либо текст!",
-        allow_generate: (text) => (!text),
-        no_input: true,
-    },
-    SUMMARIZE: {
-        id: "summarize",
-        alias: "Резюмировать текст",
-        textarea_top: "Текст, который нужно сократить:",
-        placeholder: "Большой текст, который нужно резюмировать (сократить)",
-        button_name: "Резюмировать текст",
-        icon: <Icon24FullscreenExit/>,
-        execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.SUMMARIZE_TEXT, ...args)),
-        hint: "В этом режиме можно сократить текст, оставив только самое главное, то есть сохранить основной смысл текста! Введите объемный текст, который нужно сократить, об остальном мы позаботимся сами."
-    },
-    EXTEND: {
-        id: "extend",
-        alias: "Добавить в текст воды",
-        textarea_top: "Текст, в который нужно добавить воды:",
-        placeholder: "Небольшой текст, объем которого нужно увеличить",
-        button_name: "Добавить воды",
-        icon: <Icon24Fullscreen/>,
-        execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.EXTEND_TEXT, ...args)),
-        hint: "Если вам захотелось увеличить уже существующий текст, добавив в него воды, тот этот режим для вас. Данный режим позволяет увеличить общий объем текста, при это сохранив его исходный смысл.",
-    },
-    REPHRASE: {
-        id: "rephrase",
-        alias: "Перефразировать текст",
-        textarea_top: "Текст, который нужно перефразировать:",
-        placeholder: "Текст, который вы хотите перефразировать",
-        button_name: "Перефразировать текст",
-        icon: <Icon24Switch/>,
-        execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.REPHRASE_TEXT, ...args)),
-        hint: "В этом режиме можно перефразировать текст. Введите текст, и мы его перепишем, сохранив при этом основной смысл!"
-    },
-    TEXTGEN: {
-        id: "text_gen",
-        alias: "Продолжить текст",
-        textarea_top: "Текст, который нужно продолжить:",
-        placeholder: "Текст, который вы хотите продолжить",
-        button_name: "Продолжить текст",
-        icon: <Icon24ArrowRightCircleOutline/>,
-        execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.APPEND_TEXT, ...args)),
-        hint: "В этом режиме можно продолжить введенный вами текст. Введите начало текста, который вы хотите написать, и мы его продолжим!"
-    },
-    BERT: {
-        id: "bert",
-        alias: "Заменить часть текста",
-        textarea_top: "Текст, в котором нужно заменить его часть:",
-        placeholder: "Текст, в котором нужно заменить его часть/части (обязательно с маской <MASK> в местах замены)",
-        button_name: "Заменить часть текста",
-        icon: <Icon24Shuffle/>,
-        execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.UNMASK_TEXT, ...args)),
-        hint: "В этом режиме можно заменить конкретные части текста (слово или слова) на максимально подходящие по смыслу! Чтобы указать место, где нужно выполнить замену, напишите \"<MASK>\". Мы постараемся заменить это ключевое слово на подходящее по смыслу."
-    },
-    FIX_GRAMMAR: {
-        id: "fix_grammar",
-        alias: "Исправить грамматику текста",
-        textarea_top: "Текст, грамматику которого нужно исправить:",
-        placeholder: "Текст, в котором нужно исправить орфографические ошибки",
-        button_name: "Исправить грамматику",
-        icon: <Icon24CheckBoxOn/>,
-        execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.FIX_GRAMMAR, ...args)),
-        hint: "В данном режиме вы можете исправить грамматические ошибки в своём тексте с помощью нейросети. Не забывайте проверять текст самостоятельно!",
-    }
-};
-
 const serviceStorageDefault = {
     showHint: true,
 }
-
 
 const GenerationPage = ({ id, go, dataset}) => {
 
@@ -268,11 +155,13 @@ const GenerationPage = ({ id, go, dataset}) => {
                     dataset.showSnackBar({text: "При генерации контента произошла ошибка", type: "danger"});
                     return;
             }
+            console.log('data', data);
             const {text, id} = data;
             if (text === null) {
                 dataset.showSnackBar({text: "При генерации контента произошла ошибка", type: "danger"});
                 return
             }
+            console.log('idSet', id);
             setPostId(id);
             updateHistory();
             Math.random() <= 0.3

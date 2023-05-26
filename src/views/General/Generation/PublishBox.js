@@ -4,6 +4,9 @@ import { Button, Checkbox, DateInput, Div, FormItem, Group, Headline } from "@vk
 
 
 const PublishBox = ({groupId, postId, text, showSnackBar, onPostPublish, attachments, setAttachments}) => {
+    console.log('idGet', postId);
+    console.log('text', text);
+    console.log(!text || text.length === 0 || postId === undefined || postId === null);
     const [fromGroup, setFromGroup] = useState(true);
     const [usePublishDate, setUsePublishDate] = useState(false);
     const [publishDate, setPublishDate] = useState(() => new Date());

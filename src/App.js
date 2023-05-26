@@ -11,7 +11,7 @@ import ico_ok from "./media/ok.gif";
 import WelcomeView from './views/Welcome';
 import GeneralView, { VIEW_GENERAL } from './views/General';
 //import StrawberryBackend from './api/SBBackend';
-import { showSlides } from './api/slides';
+import { showSlides, startupData } from './api/slides';
 import API from './api/API';
 import { useLocation } from '@happysanta/router';
 import { ViewAlias } from './const';
@@ -23,7 +23,7 @@ const App = () => {
 		API.getLSKey("slides_shown")
 		.then((ok) => {
 			if (!ok) {
-				showSlides(() => API.setLSKey("slides_shown", true));
+				showSlides(startupData, () => API.setLSKey("slides_shown", true));
 			}
 		})
 	}, []);
