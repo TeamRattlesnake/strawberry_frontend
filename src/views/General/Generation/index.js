@@ -220,7 +220,6 @@ const GenerationPage = ({ id, go, dataset}) => {
                             //(!service.no_input || (service.no_input && text)) &&
                             <Div>
                                 <Editor
-                                    services={Object.values(Service)}
                                     executeTextWrapper={executeTextWrapper}
                                     rows={7}
                                     text={text}

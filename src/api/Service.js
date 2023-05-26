@@ -30,6 +30,12 @@ const executeWrapper = (execute) => {
     };
 }
 
+export const Category = {
+    CREATE: "Создание",
+    EDIT: "Редактирование",
+    FIX: "Исправление",
+}
+
 const Service = {
     TEXTGEN_THEME: {
         id: "textgen_theme",
@@ -115,5 +121,22 @@ const Service = {
         hint: "В данном режиме ты можешь исправить грамматические ошибки в своём тексте с помощью нейросети.\nНе забывай проверять текст самостоятельно!",
     }
 };
+
+export const CategoryToService = {
+    [Category.CREATE]: [
+        Service.TEXTGEN_THEME,
+        Service.SCRATCH,
+        Service.TEXTGEN,
+    ],
+    [Category.EDIT]: [
+        Service.SUMMARIZE,
+        Service.EXTEND,
+        Service.REPHRASE,
+    ],
+    [Category.FIX]: [
+        Service.BERT,
+        Service.FIX_GRAMMAR,
+    ]
+}
 
 export default Service;

@@ -1,3 +1,8 @@
+.button_category_container {
+    background-color: var(--vkui--color_background_secondary);
+    border-radius: var(--vkui--size_border_radius--regular);
+}
+
 .button_patch > span > span {
     padding-left: 0 !important;
 }

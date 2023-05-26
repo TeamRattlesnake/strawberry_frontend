@@ -1,14 +1,15 @@
 import { Icon24ArrowUturnLeftOutline, Icon24ArrowUturnRightOutline } from '@vkontakte/icons';
-import { Button, ButtonGroup, Div, IconButton, Textarea, usePlatform } from '@vkontakte/vkui';
+import { Button, ButtonGroup, Div, Headline, IconButton, Textarea, usePlatform } from '@vkontakte/vkui';
 import { TextTooltip } from '@vkontakte/vkui/dist/components/TextTooltip/TextTooltip';
 import React, { useEffect, useRef, useState } from 'react';
 import styles from "./Editor.module.css";
 import { editorGuideData, showSlides } from '../../../api/slides';
 import API from '../../../api/API';
 import { CircleMenu, CircleMenuItem, TooltipPlacement } from 'react-circular-menu';
+import Service, { CategoryToService } from '../../../api/Service';
 
 
-function Editor({services, executeTextWrapper, text, setText, ...props}) {
+function Editor({executeTextWrapper, text, setText, ...props}) {
 
   const textAreaRef = useRef(null);
 
@@ -40,6 +41,14 @@ function Editor({services, executeTextWrapper, text, setText, ...props}) {
 
   const handleMouseDown = (e) => {
     e.stopPropagation();
+  };
+
+  const handleContextMenu = (e) => {
+    e.preventDefault();
+  };
+
+  const handleBlur = (e) => {
+    e.preventDefault();
   };
 
   const handleServiceSelect = async (id, serviceExecute) => {
@@ -85,28 +94,54 @@ function Editor({services, executeTextWrapper, text, setText, ...props}) {
 		})
 	}, []);
 
-  const servicesButtons = services.map((service, idx) => {
-    const id = service.id || `service_${idx}`;
+  const ButtonContainer = (props) => {
+    return (
+      //isMobile ? 
+      (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '1rem',
+        }}>{props.children}</div>
+      )
+      /*
+      :
+      (
+        <ButtonGroup mode="horizontal" gap="s" stretched>{props.children}</ButtonGroup>
+      )
+      */
+    )
+  };
+
+  const parseService = (id, service) => {
     const isDisabled = (service.allow_generate && !service.allow_generate(text, selectedText.text))
     ||
     (!service.allow_generate && (!text || text.length === 0));
     let genButton = (icon, name) => {
       return isMobile ?
       (
-        <IconButton
-          key={id}
-          onClick={() => {
-            handleServiceSelect(id, executeTextWrapper(service.execute));
-          }}
-          disabled={isDisabled || isLoading}
-        >
-          {service.icon}
-        </IconButton>
+        <TextTooltip text={service.alias}>
+          <IconButton
+            key={id}
+            onMouseDownCapture={(e) => (e.preventDefault())}
+            onFocus={(e) => (e.preventDefault())}
+            onClick={() => {
+              handleServiceSelect(id, executeTextWrapper(service.execute));
+            }}
+            disabled={isDisabled || isLoading}
+          >
+            {service.icon}
+          </IconButton>
+        </TextTooltip>
       )
       :
       (
         <Button
           key={id}
+          onMouseDownCapture={(e) => (e.preventDefault())}
+          onFocus={(e) => (e.preventDefault())}
           onClick={() => {
             handleServiceSelect(id, executeTextWrapper(service.execute));
           }}
@@ -131,49 +166,84 @@ function Editor({services, executeTextWrapper, text, setText, ...props}) {
       elem = genButton(service.icon, service.alias);
     };
     return elem;
+  }
+
+  const servicesPanel = Object.entries(CategoryToService).map(([category, services]) => {
+    return (
+      <div
+        className={styles.button_category_container}
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          flexDirection: "column",
+          alignItems: "center",
+          height: "100%",
+          gap: '1rem',
+          width: '100%',
+          padding: '1rem',
+        }}
+      >
+        <Headline>{category}</Headline>
+        <ButtonGroup
+          mode="horizontal"
+          style={{
+            width: '100%',
+          }}
+        >
+          {services.map((service, idx) => {
+            const id = service.id || `category_${category}_service_${idx}`;
+            return parseService(id, service);
+          })}
+        </ButtonGroup>
+      </div>
+    )
   });
 
-  const ButtonContainer = (props) => {
-    return (
-      isMobile ? 
-      (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}>{props.children}</div>
-      )
-      :
-      (
-        <ButtonGroup mode="horizontal" gap="s" stretched>{props.children}</ButtonGroup>
-      )
-    )
-  };
+  const servicesButtons = Object.values(Service).map((service) => {
+    const id = service.id || `service_${idx}`;
+    return parseService(id, service);
+  })
 
   return (
     <div>
       <Div>
         <ButtonContainer>
-          <Button onClick={undo} before={<Icon24ArrowUturnLeftOutline/>} disabled={isLoading || editHistoryIndex <= 0}/>
+          <Button
+            onClick={undo}
+            before={<Icon24ArrowUturnLeftOutline/>}
+            disabled={isLoading || editHistoryIndex <= 0}
+            onMouseDownCapture={(e) => (e.preventDefault())}
+            onFocus={(e) => (e.preventDefault())}
+          />
           {isMobile ? (
-            <CircleMenu
-              startAngle={-30}
-              rotationAngle={270}
-              itemSize={1}
-              radius={5}
-              /**
-               * rotationAngleInclusive (default true)
-               * Whether to include the ending angle in rotation because an
-               * item at 360deg is the same as an item at 0deg if inclusive.
-               * Leave this prop for angles other than 360deg unless otherwise desired.
-               */
-              rotationAngleInclusive={false}
+            <div
+              onMouseDownCapture={(e) => (e.stopPropagation())}
+              onFocus={(e) => (e.stopPropagation())}
             >
-              {servicesButtons.reverse()}
-            </CircleMenu>
-          ) : servicesButtons }
-          <Button onClick={redo} before={<Icon24ArrowUturnRightOutline/>} disabled={isLoading || editHistory.length - 1 <= editHistoryIndex}/>
+              <CircleMenu
+                startAngle={-30}
+                rotationAngle={270}
+                itemSize={1}
+                radius={5}
+                /**
+                 * rotationAngleInclusive (default true)
+                 * Whether to include the ending angle in rotation because an
+                 * item at 360deg is the same as an item at 0deg if inclusive.
+                 * Leave this prop for angles other than 360deg unless otherwise desired.
+                 */
+                rotationAngleInclusive={false}
+              >
+                {servicesButtons.reverse()}
+              </CircleMenu>
+            </div>
+          ) : servicesPanel }
+          <Button
+            onClick={redo}
+            before={<Icon24ArrowUturnRightOutline/>}
+            disabled={isLoading || editHistory.length - 1 <= editHistoryIndex}
+            onMouseDownCapture={(e) => (e.preventDefault())}
+            onFocus={(e) => (e.preventDefault())}
+          />
         </ButtonContainer>
       </Div>
       <Textarea
@@ -182,6 +252,9 @@ function Editor({services, executeTextWrapper, text, setText, ...props}) {
         onChange={handleTextChange}
         onSelect={handleTextSelect}
         onMouseDown={handleMouseDown}
+        onContextMenu={handleContextMenu}
+        onBlur={handleBlur}
+        disabled={isLoading}
         {...props}
       />
     </div>

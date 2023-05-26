@@ -3,7 +3,7 @@
     justify-content: space-between;
     align-items: center;
     background-color: var(--vkui--color_background_secondary);
-    border-radius: 1rem;
+    border-radius: var(--vkui--size_border_radius--regular);
     gap: 5%;
     overflow: hidden;
     padding: 1%;
