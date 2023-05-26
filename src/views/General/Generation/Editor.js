@@ -217,8 +217,8 @@ function Editor({executeTextWrapper, text, setText, ...props}) {
           />
           {isMobile ? (
             <div
-              onMouseDownCapture={(e) => (e.stopPropagation())}
-              onFocus={(e) => (e.stopPropagation())}
+              onMouseDownCapture={(e) => {e.stopPropagation(); e.preventDefault();}}
+              onFocus={(e) => {e.stopPropagation(); e.preventDefault();}}
             >
               <CircleMenu
                 startAngle={-30}
