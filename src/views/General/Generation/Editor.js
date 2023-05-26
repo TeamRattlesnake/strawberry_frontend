@@ -170,7 +170,7 @@ function Editor({services, executeTextWrapper, text, setText, ...props}) {
                */
               rotationAngleInclusive={false}
             >
-              {servicesButtons}
+              {servicesButtons.reverse()}
             </CircleMenu>
           ) : servicesButtons }
           <Button onClick={redo} before={<Icon24ArrowUturnRightOutline/>} disabled={isLoading || editHistory.length - 1 <= editHistoryIndex}/>
