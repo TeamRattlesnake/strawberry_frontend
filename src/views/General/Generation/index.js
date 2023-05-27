@@ -1,5 +1,5 @@
 import {Avatar, Div, Group, Panel, PanelHeader, PanelHeaderBack, PanelHeaderContent, Progress, Separator, SplitCol, SplitLayout } from "@vkontakte/vkui";
-import React, {useEffect, useState} from "react";
+import React, {useCallback, useEffect, useState} from "react";
 
 import StrawberryBackend from "../../../api/SBBackend";
 
@@ -9,17 +9,11 @@ import { useLocation, useRouter } from "@happysanta/router";
 import MediaBox from "./MediaBox";
 import Editor from "./Editor";
 
-import Service from "../../../api/Service";
-
 
 export const FeedbackType = {
     LIKE: 'like',
     DISLIKE: 'dislike',
 };
-
-const serviceStorageDefault = {
-    showHint: true,
-}
 
 const GenerationPage = ({ id, go, dataset}) => {
 
@@ -28,9 +22,6 @@ const GenerationPage = ({ id, go, dataset}) => {
 
     const router = useRouter();
 
-    const serviceKeyDefault = Object.keys(Service)[0]
-    const [serviceKey, setServiceKey] = useState(serviceKeyDefault);
-    const service = Service[serviceKey];
     const [text, setText] = useState("");
     const [postId, setPostId] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -40,14 +31,6 @@ const GenerationPage = ({ id, go, dataset}) => {
     const [posts, setPosts] = useState([]);
 
     const [uploadedFiles, setUploadedFiles] = useState([]);
-
-    const getServiceStorage = (serviceKey) => {
-        const data = JSON.parse(localStorage.getItem("sb_service_data"));
-        const serviceData = data?.[serviceKey] ? {...serviceStorageDefault, ...data?.[serviceKey]} : serviceStorageDefault;
-        return serviceData;
-    }
-
-    const [serviceData, setServiceData] = useState(getServiceStorage(serviceKey));
 
     useEffect(() => {
         if (isLoading) {
@@ -60,14 +43,6 @@ const GenerationPage = ({ id, go, dataset}) => {
             setProgressPercent(100);
         }
     }, [isLoading])
-
-    const saveServiceStorage = (serviceKey, data) => {
-        const oldData = JSON.parse(localStorage.getItem("sb_service_data"));
-        const newServiceData = {...oldData?.[serviceKey], ...data};
-        const newData = {...oldData, [serviceKey]: newServiceData};
-        localStorage.setItem("sb_service_data", JSON.stringify(newData));
-        setServiceData((prev) => ({...prev, ...newServiceData}));
-    }
 
     const updateHistory = () => {
         StrawberryBackend.getUserResults(group.id, 50, 0)
@@ -130,65 +105,54 @@ const GenerationPage = ({ id, go, dataset}) => {
         })
     }
 
-    const handleTextChange = (e) => {
-        setText(e.target.value);
-    }
-
-    const handleServiceClick = (e) => {
-        setServiceKey(e.target.value);
-        setServiceData(getServiceStorage(e.target.value));
-    }
-
-    const executeTextWrapper = (exec) => {
+    const executeTextWrapper = useCallback((exec) => {
         return async (inputText) => {
-        setTimeTarget(new Date().getTime() / 1000 + timeTotal);
-        setIsLoading(true);
-        return await exec(group.id, group.texts, inputText)
-        .then((data) => {
-            switch (data?.status) {
-                case 0:
-                    break;
-                case 2:
-                    dataset.showSnackBar({text: "Слишком много запросов на генерацию! Попробуйте позже.", type: "danger"});
-                    return;
-                default:
+            setTimeTarget(new Date().getTime() / 1000 + timeTotal);
+            setIsLoading(true);
+            return await exec(group.id, group.texts, inputText)
+            .then((data) => {
+                switch (data?.status) {
+                    case 0:
+                        break;
+                    case 2:
+                        dataset.showSnackBar({text: "Слишком много запросов на генерацию! Попробуйте позже.", type: "danger"});
+                        return;
+                    default:
+                        dataset.showSnackBar({text: "При генерации контента произошла ошибка", type: "danger"});
+                        return;
+                }
+                const {text, id} = data;
+                if (text === null) {
                     dataset.showSnackBar({text: "При генерации контента произошла ошибка", type: "danger"});
-                    return;
-            }
-            console.log('data', data);
-            const {text, id} = data;
-            if (text === null) {
-                dataset.showSnackBar({text: "При генерации контента произошла ошибка", type: "danger"});
-                return
-            }
-            console.log('idSet', id);
-            setPostId(id);
-            updateHistory();
-            Math.random() <= 0.3
-            &&
-            setTimeout(
-                () => dataset.showSnackBar({
-                    text: 'Мы будем признательны, если вы оставите обратную связь. Для этого оцените созданный текст в истории запросов.',
-                    type: 'info'
-                }),
-                3000
-            );
-            return text;
-        })
-        .catch((error) => {
-            console.log(error);
-            dataset.showSnackBar({text: "Неизвестная ошибка :(", type: "danger"});
-        })
-        .finally(() => setIsLoading(false));
-    };
-    }
+                    return
+                }
+                setPostId(id);
+                updateHistory();
+                Math.random() <= 0.3
+                &&
+                setTimeout(
+                    () => dataset.showSnackBar({
+                        text: 'Мы будем признательны, если вы оставите обратную связь. Для этого оцените созданный текст в истории запросов.',
+                        type: 'info'
+                    }),
+                    3000
+                );
+                return text;
+            })
+            .catch((error) => {
+                console.log(error);
+                dataset.showSnackBar({text: "Неизвестная ошибка :(", type: "danger"});
+            })
+            .finally(() => setIsLoading(false));
+        };
+    }, []);
 
     const handleEditPost = (post) => {
         const text = post.text;
         const id = post.post_id;
         setPostId(id);
         setText(text);
-    }
+    };
 
     return (
         <Panel id={id}>
@@ -206,31 +170,14 @@ const GenerationPage = ({ id, go, dataset}) => {
             <SplitLayout>
                 <SplitCol>
                     <Group>
-                        {
-                            /*
-                            serviceData.showHint &&
-                            <Div>
-                                <Hint text={service.hint} onClose={() => {
-                                    saveServiceStorage(serviceKey, {showHint: false});
-                                }}/>
-                            </Div>
-                            */
-                        }
-                        {
-                            //(!service.no_input || (service.no_input && text)) &&
-                            <Div>
-                                <Editor
-                                    executeTextWrapper={executeTextWrapper}
-                                    rows={7}
-                                    text={text}
-                                    setText={setText}
-                                    //placeholder={service.placeholder}
-                                    //value={text}
-                                    //placeholder={service.placeholder}
-                                    //onChange={handleTextChange}
-                                />
-                            </Div>
-                        }
+                        <Div>
+                            <Editor
+                                executeTextWrapper={executeTextWrapper}
+                                rows={7}
+                                text={text}
+                                setText={setText}
+                            />
+                        </Div>
                         <Div>
                             <Progress aria-labelledby="progresslabel" value={progressPercent} />
                         </Div>
@@ -252,6 +199,7 @@ const GenerationPage = ({ id, go, dataset}) => {
                                         showSnackBar={dataset.showSnackBar}
                                         attachments={uploadedFiles}
                                         setAttachments={setUploadedFiles}
+                                        onPostPublish={(_) => setText('')}
                                     />
                                 </>
                             )

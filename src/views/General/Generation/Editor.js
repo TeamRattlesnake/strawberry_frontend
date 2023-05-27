@@ -9,7 +9,7 @@ import { CircleMenu, CircleMenuItem, TooltipPlacement } from 'react-circular-men
 import Service, { CategoryToService } from '../../../api/Service';
 
 
-function Editor({executeTextWrapper, text, setText, ...props}) {
+const Editor = ({executeTextWrapper, text, setText, ...props}) => {
 
   const textAreaRef = useRef(null);
 
@@ -122,9 +122,8 @@ function Editor({executeTextWrapper, text, setText, ...props}) {
     let genButton = (icon, name) => {
       return isMobile ?
       (
-        <TextTooltip text={service.alias}>
+        <TextTooltip key={id} text={service.alias}>
           <IconButton
-            key={id}
             onMouseDownCapture={(e) => (e.preventDefault())}
             onFocus={(e) => (e.preventDefault())}
             onClick={() => {
@@ -158,7 +157,7 @@ function Editor({executeTextWrapper, text, setText, ...props}) {
     let elem = null;
     if (service.alias && service.icon) {
       elem = (
-        <TextTooltip text={service.alias}>
+        <TextTooltip key={id} text={service.alias}>
           {genButton(service.icon, undefined)}
         </TextTooltip>
       )
@@ -259,6 +258,6 @@ function Editor({executeTextWrapper, text, setText, ...props}) {
       />
     </div>
   );
-}
+};
 
-export default Editor;
+export default React.memo(Editor);

@@ -32,10 +32,9 @@ const GroupListHeader = ({showGroups, searchQuery, setSearchQuery, groups, total
 					Object.values(FilterMode).map((fm) => {
 						return (
 							<TabsItem
-								//before={fm.icon}
+								key={fm.id}
 								selected={filterMode === fm}
 								onClick={() => setFilterMode(fm)}
-								id={fm.id}
 							>
 								{fm.alias}
 							</TabsItem>
@@ -105,7 +104,7 @@ const GroupListContent = ({groups, handleGenerate, showGroups, setShowGroups, is
 		:
 		(
 			<>
-				{groups.map((group) => <GroupItem group={group} onGenerate={handleGenerate}/>)}
+				{groups.map((group) => <GroupItem key={group.id} group={group} onGenerate={handleGenerate}/>)}
 			</>
 		)
 	)
@@ -119,7 +118,7 @@ const GroupList = ({ go, dataset }) => {
 	const [filterMode, setFilterMode] = useState(FilterMode.ALL);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [totalPages, setTotalPages] = useState(1);
-	const [searchQuery, setSearchQuery] = useState(null);
+	const [searchQuery, setSearchQuery] = useState('');
 	const [showGroups, setShowGroups] = useState(false);
 	const [perPage, _] = useState(7);
 
@@ -242,7 +241,7 @@ const GroupList = ({ go, dataset }) => {
 
 	useEffect(() => {
 		setCurrentPage(1);
-		setSearchQuery(null); // опустошаем поисковый запрос
+		setSearchQuery(''); // опустошаем поисковый запрос
 	}, [filterMode]) 
 
 	useEffect(() => {

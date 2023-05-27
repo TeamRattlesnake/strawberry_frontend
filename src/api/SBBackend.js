@@ -45,7 +45,6 @@ class StrawberryBackend {
             scope,
             app_id: Number(queryParams['vk_app_id']), //51575840
         }).then((data) => {
-            console.log('scope:', scope, 'data:', data);
             if (data?.access_token) {
                 const newInfo = {...info, [scope]: data?.access_token};
                 API.setLSKey("access_token_data", newInfo);
@@ -330,42 +329,14 @@ class StrawberryBackend {
     }
 
     static async hasScope(scope) {
-        //console.log('qp', queryParams);
-        //return queryParams?.vk_access_token_settings?.split(',')?.includes(scope);
-        
         return API.getLSKey("access_token_data")
         .then((data) => {
             const val = data?.[scope]
             const out = val !== null && val !== undefined;
-            console.log('scope:', scope, 'hasScope:', out, data);
             return out
         })
-        
-        /*
-        const info = await API.getLSKey(LocalStorageKey.ACCESS_TOKEN_INFO_KEY);
-        const scopes = info?.scopes;
-        if (scopes && scopes.length > 0) {
-            return scopes.includes(scope)
-        } else {
-            return false
-        }
-        */
     }
-
-    /*
-    static async askScope(scope) {
-        const info = await API.getLSKey(LocalStorageKey.ACCESS_TOKEN_INFO_KEY);
-        const scopes = info?.scopes || [];
-        const token = await StrawberryBackend.getVKToken(scope);
-        if (!token) return;
-        scopes.push(scope);
-        return API.setLSKey(LocalStorageKey.ACCESS_TOKEN_INFO_KEY, {
-            token,
-            scopes
-        })
-    }
-    */
-
+    
     static async uploadFile(uploadUrl, file) {
         const formData = new FormData();
         formData.append("upload_url", uploadUrl);

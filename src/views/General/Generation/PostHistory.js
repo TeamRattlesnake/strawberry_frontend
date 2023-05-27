@@ -15,7 +15,6 @@ const PostHistory = ({onFeedback, onRecover, onEditPost, posts, updateHistory}) 
         updateHistory()
     }, []);
     const [recoverablePosts, setRecoverablePosts] = useState([]);
-    console.log(usePlatform());
     return (
         <Group header={<Header>История запросов</Header>}>
             <Div>
