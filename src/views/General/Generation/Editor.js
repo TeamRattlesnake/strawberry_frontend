@@ -12,6 +12,7 @@ import Service, { CategoryToService } from '../../../api/Service';
 const Editor = ({executeTextWrapper, text, setText, ...props}) => {
 
   const textAreaRef = useRef(null);
+  const circleMenuWrapperRef = useRef(null);
 
   const isMobile = (usePlatform() === 'android' || usePlatform() === 'ios');
 
@@ -44,7 +45,7 @@ const Editor = ({executeTextWrapper, text, setText, ...props}) => {
   };
 
   const handleContextMenu = (e) => {
-    e.preventDefault();
+    isMobile && e.preventDefault();
   };
 
   const handleBlur = (e) => {
@@ -94,24 +95,23 @@ const Editor = ({executeTextWrapper, text, setText, ...props}) => {
 		})
 	}, []);
 
+  /*
+  useEffect(() => {
+    if (isMobile && selectedText.text) {
+      circleMenuWrapperRef.click();
+    }
+  }, [selectedText.text]);
+  */
+
   const ButtonContainer = (props) => {
     return (
-      //isMobile ? 
-      (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: '1rem',
-        }}>{props.children}</div>
-      )
-      /*
-      :
-      (
-        <ButtonGroup mode="horizontal" gap="s" stretched>{props.children}</ButtonGroup>
-      )
-      */
+      <div style={{
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: '1rem',
+      }}>{props.children}</div>
     )
   };
 
@@ -218,19 +218,14 @@ const Editor = ({executeTextWrapper, text, setText, ...props}) => {
             <div
               onMouseDownCapture={(e) => {e.stopPropagation(); e.preventDefault();}}
               onFocus={(e) => {e.stopPropagation(); e.preventDefault();}}
+              ref={circleMenuWrapperRef}
             >
               <CircleMenu
-                startAngle={-30}
+                startAngle={-45}
                 rotationAngle={270}
                 itemSize={1}
                 radius={5}
-                /**
-                 * rotationAngleInclusive (default true)
-                 * Whether to include the ending angle in rotation because an
-                 * item at 360deg is the same as an item at 0deg if inclusive.
-                 * Leave this prop for angles other than 360deg unless otherwise desired.
-                 */
-                rotationAngleInclusive={false}
+                rotationAngleInclusive={true}
               >
                 {servicesButtons.reverse()}
               </CircleMenu>

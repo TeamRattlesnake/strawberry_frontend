@@ -41,8 +41,7 @@ class API {
 
     static async getLSKey(key) {
         //return JSON.parse(localStorage.getItem(key));
-        
-        return bridge.send('VKWebAppStorageGet', {
+        return await bridge.send('VKWebAppStorageGet', {
             keys: [key,]
         })
         .then((data) => {
@@ -58,7 +57,7 @@ class API {
     static async setLSKey(key, value) {
         //localStorage.setItem(key, JSON.stringify(value));
         //return true
-        return bridge.send('VKWebAppStorageSet', {
+        return await bridge.send('VKWebAppStorageSet', {
             key,
             value: JSON.stringify(value),
         })

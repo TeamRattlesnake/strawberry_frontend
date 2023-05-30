@@ -3,6 +3,8 @@ import question from "../../../media/question.gif"
 
 
 const Hint = ({text, onClose}) => {
+    const [popout, setPopout] = React.useState(null);
+    const onClick = () => setPopout(<CustomP onClose={() => setPopout(null)} />);
     return (
         <Banner
             before={

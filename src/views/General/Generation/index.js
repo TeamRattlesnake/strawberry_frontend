@@ -1,4 +1,4 @@
-import {Avatar, Div, Group, Panel, PanelHeader, PanelHeaderBack, PanelHeaderContent, Progress, Separator, SplitCol, SplitLayout } from "@vkontakte/vkui";
+import {Avatar, Div, Group, IconButton, ModalPageHeader, ModalPage, Panel, PanelHeader, PanelHeaderBack, PanelHeaderContent, Progress, Separator, SplitCol, SplitLayout, ModalRoot, Header, Text } from "@vkontakte/vkui";
 import React, {useCallback, useEffect, useState} from "react";
 
 import StrawberryBackend from "../../../api/SBBackend";
@@ -8,6 +8,8 @@ import PublishBox from "./PublishBox";
 import { useLocation, useRouter } from "@happysanta/router";
 import MediaBox from "./MediaBox";
 import Editor from "./Editor";
+import { Icon24InfoCircleOutline } from "@vkontakte/icons";
+import Service from "../../../api/Service";
 
 
 export const FeedbackType = {
@@ -29,6 +31,42 @@ const GenerationPage = ({ id, go, dataset}) => {
     const [progressPercent, setProgressPercent] = useState(0);
     const timeTotal = 15; // секунд
     const [posts, setPosts] = useState([]);
+
+    const [activeModal, setActiveModal] = useState(null);
+    const modal = (
+        <ModalRoot activeModal={activeModal}>
+            <ModalPage
+                id="editorInfo"
+                onClose={() => setActiveModal(null)}
+                header={
+                    <ModalPageHeader>
+                        Как пользоваться редактором?
+                    </ModalPageHeader>
+                }
+            >
+                <Group>
+                    {
+                        Object.values(Service).map((service) => {
+                            return (
+                                <>
+                                    <Div>
+                                        <div style={{
+                                            display: "flex",
+                                            flexDirection: "row",
+                                            justifyContent: "flex-start",
+                                            alignItems: "center",
+                                        }}>{service.icon}<Header>{service.alias}</Header></div>
+                                        <Text>{service.hint}</Text>
+                                    </Div>
+                                    <Separator/>
+                                </>
+                            )
+                        })
+                    }
+                </Group>
+            </ModalPage>
+        </ModalRoot>
+    );
 
     const [uploadedFiles, setUploadedFiles] = useState([]);
 
@@ -52,6 +90,10 @@ const GenerationPage = ({ id, go, dataset}) => {
         .catch((error) => {
             console.log(error);
         })
+    };
+
+    const handleShowEditorInfo = () => {
+        setActiveModal("editorInfo");
     }
 
     const handleRecover = (postId, setRecoverable) => {
@@ -167,16 +209,26 @@ const GenerationPage = ({ id, go, dataset}) => {
                     {group?.name}
                 </PanelHeaderContent>
             </PanelHeader>
-            <SplitLayout>
+            <SplitLayout modal={modal}>
                 <SplitCol>
                     <Group>
                         <Div>
-                            <Editor
-                                executeTextWrapper={executeTextWrapper}
-                                rows={7}
-                                text={text}
-                                setText={setText}
-                            />
+                            <div style={{
+                                position: "relative",
+                            }}>
+                                <Editor
+                                    executeTextWrapper={executeTextWrapper}
+                                    rows={7}
+                                    text={text}
+                                    setText={setText}
+                                />
+                                <IconButton style={{
+                                    position: "absolute",
+                                    top: "0",
+                                    right: "0",
+                                    translate: "-5% -30%"
+                                }} onClick={() => handleShowEditorInfo()}><Icon24InfoCircleOutline/></IconButton>
+                            </div>
                         </Div>
                         <Div>
                             <Progress aria-labelledby="progresslabel" value={progressPercent} />
