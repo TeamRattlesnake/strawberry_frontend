@@ -1,4 +1,4 @@
-import { Icon24ArrowUturnLeftOutline, Icon24ArrowUturnRightOutline } from '@vkontakte/icons';
+import { Icon24ArrowUturnLeftOutline, Icon24ArrowUturnRightOutline, Icon24InfoCircleOutline } from '@vkontakte/icons';
 import { Button, ButtonGroup, Div, Headline, IconButton, Textarea, usePlatform } from '@vkontakte/vkui';
 import { TextTooltip } from '@vkontakte/vkui/dist/components/TextTooltip/TextTooltip';
 import React, { useEffect, useRef, useState } from 'react';
@@ -9,7 +9,7 @@ import { CircleMenu, CircleMenuItem, TooltipPlacement } from 'react-circular-men
 import Service, { CategoryToService } from '../../../api/Service';
 
 
-const Editor = ({executeTextWrapper, text, setText, ...props}) => {
+const Editor = ({executeTextWrapper, text, setText, onShowEditorInfo, ...props}) => {
 
   const textAreaRef = useRef(null);
   const circleMenuWrapperRef = useRef(null);
@@ -111,6 +111,7 @@ const Editor = ({executeTextWrapper, text, setText, ...props}) => {
         justifyContent: 'space-between',
         alignItems: 'center',
         gap: '1rem',
+        ...props.style,
       }}>{props.children}</div>
     )
   };
@@ -206,7 +207,21 @@ const Editor = ({executeTextWrapper, text, setText, ...props}) => {
   return (
     <div>
       <Div>
-        <ButtonContainer>
+        <ButtonContainer
+          style={{ 
+            paddingTope: 0,
+            paddingBottom: 0,
+            justifyContent: isMobile ? 'center' : 'flex-end'
+          }}
+        >
+          <Button
+            onClick={onShowEditorInfo}
+            before={<Icon24InfoCircleOutline/>}
+          />
+        </ButtonContainer>
+      </Div>
+      <Div>
+        <ButtonContainer>                                                                                                                                                                                                     
           <Button
             onClick={undo}
             before={<Icon24ArrowUturnLeftOutline/>}
@@ -226,6 +241,7 @@ const Editor = ({executeTextWrapper, text, setText, ...props}) => {
                 itemSize={1}
                 radius={5}
                 rotationAngleInclusive={true}
+                className={styles.circle_menu}
               >
                 {servicesButtons.reverse()}
               </CircleMenu>
@@ -249,6 +265,7 @@ const Editor = ({executeTextWrapper, text, setText, ...props}) => {
         onContextMenu={handleContextMenu}
         onBlur={handleBlur}
         disabled={isLoading}
+        placeholder='Ваш текст...'
         {...props}
       />
     </div>

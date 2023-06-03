@@ -45,7 +45,7 @@ const Service = {
         button_name: "Создать текст",
         icon: <Icon24WriteOutline/>,
         execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.GENERATE_TEXT, ...args)),
-        hint: "В этом режиме можно на основе предоставленной тобой темы создать соответствующий текст!\nПопробуй ввести тему текста и создать что-то новое."
+        hint: "В этом режиме можно на основе предоставленной тобой темы создать соответствующий текст!"
     },
     SCRATCH: {
         id: "scratch",
@@ -55,7 +55,7 @@ const Service = {
         button_name: "Создать с нуля",
         icon: <Icon24MagicWandOutline/>,
         execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.SCRATCH, ...args)),
-        hint: "Данный режим позволяет создать текст, основываясь только на постах сообщества.\nТебе даже не нужно ничего вводить!",
+        hint: "Данный режим позволяет создать текст, основываясь только на постах сообщества.",
         allow_generate: (text, _) => (!text),
         no_input: true,
     },
@@ -67,7 +67,7 @@ const Service = {
         button_name: "Продолжить текст",
         icon: <Icon24ArrowRightCircleOutline/>,
         execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.APPEND_TEXT, ...args)),
-        hint: "В этом режиме можно продолжить введенный текст.\nВведи начало текста, и мы его продолжим!"
+        hint: "В этом режиме ты можешь ввести начало текста, и мы его продолжим!"
     },
     SUMMARIZE: {
         id: "summarize",

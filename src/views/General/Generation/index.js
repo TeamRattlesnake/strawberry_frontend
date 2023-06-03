@@ -213,22 +213,14 @@ const GenerationPage = ({ id, go, dataset}) => {
                 <SplitCol>
                     <Group>
                         <Div>
-                            <div style={{
-                                position: "relative",
-                            }}>
-                                <Editor
-                                    executeTextWrapper={executeTextWrapper}
-                                    rows={7}
-                                    text={text}
-                                    setText={setText}
-                                />
-                                <IconButton style={{
-                                    position: "absolute",
-                                    top: "0",
-                                    right: "0",
-                                    translate: "-5% -30%"
-                                }} onClick={() => handleShowEditorInfo()}><Icon24InfoCircleOutline/></IconButton>
-                            </div>
+                            <Editor
+                                executeTextWrapper={executeTextWrapper}
+                                rows={7}
+                                text={text}
+                                setText={setText}
+                                onShowEditorInfo={handleShowEditorInfo}
+
+                            />
                         </Div>
                         <Div>
                             <Progress aria-labelledby="progresslabel" value={progressPercent} />
