@@ -92,9 +92,9 @@ const GenerationPage = ({ id, go, dataset}) => {
         })
     };
 
-    const handleShowEditorInfo = () => {
+    const handleShowEditorInfo = useCallback(() => {
         setActiveModal("editorInfo");
-    }
+    }, []);
 
     const handleRecover = (postId, setRecoverable) => {
         StrawberryBackend.postRecover(postId)
@@ -219,7 +219,6 @@ const GenerationPage = ({ id, go, dataset}) => {
                                 text={text}
                                 setText={setText}
                                 onShowEditorInfo={handleShowEditorInfo}
-
                             />
                         </Div>
                         <Div>
