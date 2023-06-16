@@ -21,8 +21,8 @@ const Editor = ({executeTextWrapper, text, setText, onShowEditorInfo, ...props})
     [text, setText] = useState('');
   }
   const [selectedText, setSelectedText] = useState({});
-  const [editHistory, setEditHistory] = useState([]);
-  const [editHistoryIndex, setEditHistoryIndex] = useState(-1);
+  const [editHistory, setEditHistory] = useState(['']);
+  const [editHistoryIndex, setEditHistoryIndex] = useState(0);
   const [activeButton, setActiveButton] = useState(null);
 
   const handleTextChange = (event) => {
@@ -241,7 +241,6 @@ const Editor = ({executeTextWrapper, text, setText, onShowEditorInfo, ...props})
                 itemSize={1}
                 radius={5}
                 rotationAngleInclusive={true}
-                className={styles.circle_menu}
               >
                 {servicesButtons.reverse()}
               </CircleMenu>
