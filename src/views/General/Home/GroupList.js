@@ -78,7 +78,7 @@ const GroupListContent = ({groups, handleGenerate, showGroups, setShowGroups, is
 					src={imgQuestion}
 				/>
 			}
-			subheader="Пока здесь нет сообществ. Разрешите право на просмотр списка ваших сообществ, чтобы создать пост."
+			subheader="Пока здесь нет сообществ. Дайте разрешение на просмотр списка ваших сообществ, чтобы создать пост."
 			actions={<Button onClick={() => setShowGroups(true)}>Разрешить</Button>}
 		/>
 	);
