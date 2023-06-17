@@ -13,6 +13,8 @@ export const GenerationMethod = {
     FIX_GRAMMAR: "fix_grammar",
 };
 
+const VK_API_VERSION = '5.131';
+
 class StrawberryBackend {
 
     static isOK(response, isSoft = false) {
@@ -156,7 +158,7 @@ class StrawberryBackend {
         return bridge.send('VKWebAppCallAPIMethod', {
             method: 'wall.get',
             params: {
-                v: '5.131',
+                v: VK_API_VERSION,
                 access_token: accessToken,
                 owner_id: -groupId,
                 count: numPosts,
@@ -200,7 +202,7 @@ class StrawberryBackend {
         let groupsData = await bridge.send('VKWebAppCallAPIMethod', {
             method: 'groups.search',
             params: {
-                v: '5.131',
+                v: VK_API_VERSION,
                 access_token: accessToken,
                 q: query,
                 offset: (currentPage-1)*perPage,
@@ -232,16 +234,19 @@ class StrawberryBackend {
 
     static async getGroups(currentPage, perPage, mode) {
         const accessToken = await StrawberryBackend.getVKToken('groups');
+        const params = {
+            filter: mode,
+            extended: 1,
+            v: VK_API_VERSION,
+            access_token: accessToken,
+            offset: (currentPage-1)*perPage,
+            count: perPage
+        };
+        if (mode) params['filter'] = mode;
         return await bridge.send('VKWebAppCallAPIMethod', {
-            method: 'groups.get',
-            params: {
-                filter: mode,
-                extended: 1,
-                v: '5.131',
-                access_token: accessToken,
-                offset: (currentPage-1)*perPage,
-                count: perPage
-            }})
+                method: 'groups.get',
+                params,
+            })
             .then((data) => { 
                 if (data.response) {
                     return {

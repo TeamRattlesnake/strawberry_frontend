@@ -67,7 +67,7 @@ const Service = {
         button_name: "Продолжить текст",
         icon: <Icon24ArrowRightCircleOutline/>,
         execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.APPEND_TEXT, ...args)),
-        hint: "В этом режиме ты можешь ввести начало текста, и мы его продолжим!"
+        hint: "В этом режиме ты можешь ввести начало текста, а мы его продолжим!"
     },
     SUMMARIZE: {
         id: "summarize",
