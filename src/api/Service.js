@@ -1,8 +1,15 @@
 import React from "react";
 
-import { Icon24CheckBoxOn, Icon24Fullscreen, Icon24FullscreenExit, Icon24MagicWandOutline, Icon24Switch, Icon24WriteOutline } from '@vkontakte/icons';
-import { Icon24ArrowRightCircleOutline } from '@vkontakte/icons';
-import { Icon24Shuffle } from '@vkontakte/icons';
+import {
+    Icon24ArrowRightCircleOutline,
+    Icon24CheckBoxOn, 
+    Icon24Fullscreen, 
+    Icon24FullscreenExit, 
+    Icon24MagicWandOutline, 
+    Icon24Shuffle,
+    Icon24Switch, 
+    Icon24WriteOutline 
+} from '@vkontakte/icons';
 
 import StrawberryBackend, { GenerationMethod } from "./SBBackend";
 
@@ -37,8 +44,7 @@ export const Category = {
 }
 
 const Service = {
-    TEXTGEN_THEME: {
-        id: "textgen_theme",
+    [GenerationMethod.GENERATE_TEXT]: {
         alias: "Создать текст по заданной теме",
         textarea_top: "Тема (краткое описание) текста:",
         placeholder: "Ваша тема для текста (о чем он будет?)",
@@ -47,8 +53,7 @@ const Service = {
         execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.GENERATE_TEXT, ...args)),
         hint: "В этом режиме можно на основе предоставленной тобой темы создать соответствующий текст!"
     },
-    SCRATCH: {
-        id: "scratch",
+    [GenerationMethod.SCRATCH]: {
         alias: "Создать текст с нуля",
         textarea_top: "",
         placeholder: "",
@@ -59,8 +64,7 @@ const Service = {
         allow_generate: (text, _) => (!text),
         no_input: true,
     },
-    TEXTGEN: {
-        id: "text_gen",
+    [GenerationMethod.APPEND_TEXT]: {
         alias: "Продолжить текст",
         textarea_top: "Текст, который нужно продолжить:",
         placeholder: "Текст, который вы хотите продолжить",
@@ -69,8 +73,7 @@ const Service = {
         execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.APPEND_TEXT, ...args)),
         hint: "В этом режиме ты можешь ввести начало текста, а мы его продолжим!"
     },
-    SUMMARIZE: {
-        id: "summarize",
+    [GenerationMethod.SUMMARIZE_TEXT]: {
         alias: "Резюмировать текст",
         textarea_top: "Текст, который нужно сократить:",
         placeholder: "Большой текст, который нужно резюмировать (сократить)",
@@ -79,8 +82,7 @@ const Service = {
         execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.SUMMARIZE_TEXT, ...args)),
         hint: "В этом режиме можно сократить текст, оставив только самое главное, то есть сохранить основной смысл текста!\nВведи объемный текст, об остальном мы позаботимся сами."
     },
-    EXTEND: {
-        id: "extend",
+    [GenerationMethod.EXTEND_TEXT]: {
         alias: "Добавить в текст воды",
         textarea_top: "Текст, в который нужно добавить воды:",
         placeholder: "Небольшой текст, объем которого нужно увеличить",
@@ -89,8 +91,7 @@ const Service = {
         execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.EXTEND_TEXT, ...args)),
         hint: "С помощью этого режима можно увеличить уже существующий текст, добавив в него воды.\nИсходный смысл при этом сохраняется.",
     },
-    REPHRASE: {
-        id: "rephrase",
+    [GenerationMethod.REPHRASE_TEXT]: {
         alias: "Перефразировать текст",
         textarea_top: "Текст, который нужно перефразировать:",
         placeholder: "Текст, который вы хотите перефразировать",
@@ -99,8 +100,7 @@ const Service = {
         execute: executeWrapper((...args) => StrawberryBackend.generate(GenerationMethod.REPHRASE_TEXT, ...args)),
         hint: "В этом режиме можно перефразировать текст.\nВведи текст, и мы его перепишем, сохранив при этом основной смысл!"
     },
-    BERT: {
-        id: "bert",
+    [GenerationMethod.UNMASK_TEXT]: {
         alias: "Заменить часть текста",
         textarea_top: "Текст, в котором нужно заменить его часть:",
         placeholder: "Текст, в котором нужно заменить его часть/части (обязательно с маской <MASK> в местах замены)",
@@ -110,8 +110,7 @@ const Service = {
         hint: "В этом режиме можно заменить конкретные части текста на максимально подходящие по смыслу!\nПросто выдели часть текста, чтобы указать место, где нужно выполнить замену.",
         allow_generate: (text, selectedText) => (text && selectedText),
     },
-    FIX_GRAMMAR: {
-        id: "fix_grammar",
+    [GenerationMethod.FIX_GRAMMAR]: {
         alias: "Исправить грамматику текста",
         textarea_top: "Текст, грамматику которого нужно исправить:",
         placeholder: "Текст, в котором нужно исправить орфографические ошибки",
@@ -124,18 +123,18 @@ const Service = {
 
 export const CategoryToService = {
     [Category.CREATE]: [
-        Service.TEXTGEN_THEME,
-        Service.SCRATCH,
-        Service.TEXTGEN,
+        GenerationMethod.GENERATE_TEXT,
+        GenerationMethod.SCRATCH,
+        GenerationMethod.APPEND_TEXT,
     ],
     [Category.EDIT]: [
-        Service.SUMMARIZE,
-        Service.EXTEND,
-        Service.REPHRASE,
+        GenerationMethod.SUMMARIZE_TEXT,
+        GenerationMethod.EXTEND_TEXT,
+        GenerationMethod.REPHRASE_TEXT,
     ],
     [Category.FIX]: [
-        Service.BERT,
-        Service.FIX_GRAMMAR,
+        GenerationMethod.UNMASK_TEXT,
+        GenerationMethod.FIX_GRAMMAR,
     ]
 }
 

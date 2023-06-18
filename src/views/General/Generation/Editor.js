@@ -168,7 +168,7 @@ const Editor = ({executeTextWrapper, text, setText, onShowEditorInfo, ...props})
     return elem;
   }
 
-  const servicesPanel = Object.entries(CategoryToService).map(([category, services]) => {
+  const servicesPanel = Object.entries(CategoryToService).map(([category, serviceKeys]) => {
     return (
       <div
         className={styles.button_category_container}
@@ -190,18 +190,18 @@ const Editor = ({executeTextWrapper, text, setText, onShowEditorInfo, ...props})
             width: '100%',
           }}
         >
-          {services.map((service, idx) => {
-            const id = service.id || `category_${category}_service_${idx}`;
-            return parseService(id, service);
+          {serviceKeys.map((serviceKey, idx) => {
+            const id = serviceKey || `category_${category}_service_${idx}`;
+            return parseService(id, Service[serviceKey]);
           })}
         </ButtonGroup>
       </div>
     )
   });
 
-  const servicesButtons = Object.values(Service).map((service) => {
-    const id = service.id || `service_${idx}`;
-    return parseService(id, service);
+  const servicesButtons = Object.keys(Service).map((serviceKey) => {
+    const id = serviceKey || `service_${idx}`;
+    return parseService(id, Service[serviceKey]);
   })
 
   return (

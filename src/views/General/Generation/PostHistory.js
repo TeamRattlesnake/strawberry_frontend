@@ -6,6 +6,7 @@ import moment from 'moment-timezone';
 import { FeedbackType } from ".";
 
 import styles from "./PostHistory.module.css";
+import Service from "../../../api/Service";
 
 moment.locale('ru');
 
@@ -63,7 +64,7 @@ const PostHistory = ({onFeedback, onRecover, onEditPost, posts, updateHistory}) 
                                         }
                                         <div className={styles.content}>
                                             <Div>Создано: {moment.unix(post.date).tz("Europe/Moscow").format('YYYY-MM-DD HH:mm:ss')}</Div>
-                                            <Div>Метод: {post.method}</Div>
+                                            <Div>Метод: {Service[post.method].alias}</Div>
                                             <Div>Опубликовано: {post.published ? 'Да': 'Нет'}</Div>
                                             <Separator/>
                                             <Div>
