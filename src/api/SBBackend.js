@@ -13,7 +13,7 @@ export const GenerationMethod = {
     FIX_GRAMMAR: "fix_grammar",
 };
 
-const VK_API_VERSION = '5.131';
+export const VK_API_VERSION = '5.131';
 
 class StrawberryBackend {
 

@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import styles from "./Editor.module.css";
 import { editorGuideData, showSlides } from '../../../api/slides';
 import API from '../../../api/API';
-import { CircleMenu, CircleMenuItem, TooltipPlacement } from 'react-circular-menu';
+import { CircleMenu } from 'react-circular-menu';
 import Service, { CategoryToService } from '../../../api/Service';
 
 

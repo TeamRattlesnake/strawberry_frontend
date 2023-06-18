@@ -1,4 +1,22 @@
-import {Avatar, Div, Group, IconButton, ModalPageHeader, ModalPage, Panel, PanelHeader, PanelHeaderBack, PanelHeaderContent, Progress, Separator, SplitCol, SplitLayout, ModalRoot, Header, Text } from "@vkontakte/vkui";
+import {
+    Avatar,
+    Div,
+    Group,
+    ModalPageHeader,
+    ModalPage,
+    Panel,
+    PanelHeader,
+    PanelHeaderBack,
+    PanelHeaderContent,
+    Progress,
+    Separator,
+    SplitCol,
+    SplitLayout,
+    ModalRoot,
+    Header,
+    Text
+} from "@vkontakte/vkui";
+
 import React, {useCallback, useEffect, useState} from "react";
 
 import StrawberryBackend from "../../../api/SBBackend";
@@ -8,7 +26,6 @@ import PublishBox from "./PublishBox";
 import { useLocation, useRouter } from "@happysanta/router";
 import MediaBox from "./MediaBox";
 import Editor from "./Editor";
-import { Icon24InfoCircleOutline } from "@vkontakte/icons";
 import Service from "../../../api/Service";
 
 

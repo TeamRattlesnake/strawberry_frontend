@@ -44,14 +44,8 @@ const PostHistory = ({onFeedback, onRecover, onEditPost, posts, updateHistory}) 
                                         key={post.post_id}
                                         mode="shadow"
                                         style={{
-                                            //flex: '2 2 auto',
-                                            //paddingTop: '24px',
-                                            //paddingBottom: '24px',
-                                            //minWidth: '20vw',
-                                            //width: '100%',
                                             position: "relative",
                                             overflow: 'hidden',
-                                            //height: '10em',
                                         }}
                                     >
                                         {

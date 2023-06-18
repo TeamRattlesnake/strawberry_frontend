@@ -4,8 +4,8 @@ import styles from "./MediaBox.module.css";
 import { Icon12Cancel, Icon24Document, Icon36Add } from '@vkontakte/icons';
 
 import bridge from '@vkontakte/vk-bridge';
-import StrawberryBackend from "../../../api/SBBackend";
-import { useEffect, useState } from "react";
+import StrawberryBackend, { VK_API_VERSION } from "../../../api/SBBackend";
+import { useState } from "react";
 
 
 const PHOTO_TYPES = [
@@ -37,12 +37,9 @@ const MediaBox = ({uploadedFiles, setUploadedFiles}) => {
         StrawberryBackend.getVKToken(scope)
         .then((token) => {
             const uploadParams = {
-                v: '5.131',
+                v: VK_API_VERSION,
                 access_token: token,
             };
-            //if (isPhoto) {
-            //    uploadParams['group_id'] = groupId;
-            //}
             bridge.send('VKWebAppCallAPIMethod', {
                 method: uploadMethod,
                 params: uploadParams,
@@ -60,7 +57,7 @@ const MediaBox = ({uploadedFiles, setUploadedFiles}) => {
                     bridge.send('VKWebAppCallAPIMethod', {
                         method: saveMethod,
                         params: {
-                            v: '5.131',
+                            v: VK_API_VERSION,
                             access_token: token,
                             ...res,
                         }
