@@ -234,6 +234,7 @@ const Editor = ({executeTextWrapper, text, setText, onShowEditorInfo, ...props})
               onMouseDownCapture={(e) => {e.stopPropagation(); e.preventDefault();}}
               onFocus={(e) => {e.stopPropagation(); e.preventDefault();}}
               ref={circleMenuWrapperRef}
+              className={styles.circle_menu_wrapper}
             >
               <CircleMenu
                 startAngle={-45}

@@ -6,3 +6,7 @@
 .button_patch > span > span {
     padding-left: 0 !important;
 }
+
+.circle_menu_wrapper > * {
+    z-index: 1 !important;
+}
