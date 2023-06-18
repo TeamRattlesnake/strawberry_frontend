@@ -56,8 +56,10 @@ const PostHistory = ({onFeedback, onRecover, onEditPost, posts, updateHistory}) 
                                     >
                                         {
                                             recoverablePosts.includes(post.post_id) &&
-                                            <div className={styles['blocking-element']}>
-                                                <span>Запрос удалён</span>
+                                            <div className={styles.blocking_element}>
+                                                <div className={styles.blocking_element_message}>
+                                                    <span>Запрос удалён</span>
+                                                </div>
                                                 <Button
                                                     onClick={() => onRecover && onRecover(post.post_id, setRecoverablePosts)}
                                                 >

@@ -1,4 +1,4 @@
-.blocking-element {
+.blocking_element {
     display: flex;
     justify-content: center;
     flex-direction: column;
@@ -11,6 +11,12 @@
     height: 100%;
     background-color: rgba(0, 0, 0, 0.67); /* Darkens the background */
     z-index: 1; /* Places the blocking element above other elements */
+}
+
+.blocking_element_message {
+    padding: 0.5rem;
+    background-color: var(--vkui--color_background_secondary);
+    border-radius: var(--vkui--size_border_radius--regular);
 }
 
 .content {
