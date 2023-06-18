@@ -10,6 +10,8 @@ import { Route } from '../../../router';
 import { useRouter } from '@happysanta/router';
 import GroupItem from './GroupItem';
 
+import styles from "./GroupList.module.css";
+
 
 export const FilterMode = {
 	ALL: {
@@ -25,6 +27,7 @@ export const FilterMode = {
 }
 
 const GroupListHeader = ({showGroups, searchQuery, setSearchQuery, groups, totalPages, currentPage, filterMode, setCurrentPage, setFilterMode}) => {
+	const isMobile = (usePlatform() === 'android' || usePlatform() === 'ios');
 	return (
 		<>
 			<Tabs>
@@ -63,6 +66,7 @@ const GroupListHeader = ({showGroups, searchQuery, setSearchQuery, groups, total
 					onChange={(page) => setCurrentPage(page)}
 					siblingCount={1}
 					boundaryCount={1}
+					className={isMobile ? styles.pagination_mobile_bar : null}
 				/>
 			}
 		</>
