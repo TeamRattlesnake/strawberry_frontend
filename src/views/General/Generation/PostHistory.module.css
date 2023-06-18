@@ -20,3 +20,7 @@
     justify-content: center;
     flex-direction: column;
 }
+
+.card_scroll > div > button {
+    z-index: 2;
+}

@@ -23,6 +23,7 @@ const PostHistory = ({onFeedback, onRecover, onEditPost, posts, updateHistory}) 
                     ?
                     <CardScroll
                         size={(usePlatform() === "ios" || usePlatform() === "android") ? "l" : "s"}
+                        className={styles.card_scroll}
                     >
                         {
                             posts.map((post) => {
