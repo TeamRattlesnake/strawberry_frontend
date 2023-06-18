@@ -7,6 +7,7 @@ import { editorGuideData, showSlides } from '../../../api/slides';
 import API from '../../../api/API';
 import { CircleMenu } from 'react-circular-menu';
 import Service, { CategoryToService } from '../../../api/Service';
+import { GenerationMethod } from '../../../api/SBBackend';
 
 
 const Editor = ({executeTextWrapper, text, setText, onShowEditorInfo, ...props}) => {
@@ -54,13 +55,13 @@ const Editor = ({executeTextWrapper, text, setText, onShowEditorInfo, ...props})
 
   const handleServiceSelect = async (id, serviceExecute) => {
     setActiveButton(id);
-    const targetText = id === 'bert' ? text.slice(0, selectedText.start) + "<MASK>" + text.slice(selectedText.end) : selectedText.text || text;
+    const targetText = id === GenerationMethod.UNMASK_TEXT ? text.slice(0, selectedText.start) + "<MASK>" + text.slice(selectedText.end) : selectedText.text || text;
     const updatedText = await serviceExecute(targetText);
     if (!updatedText) {
       setActiveButton(null);
       return;
     }
-    const newText = (id !== 'bert' && selectedText.text) ? text.replace(selectedText.text, updatedText) : updatedText;
+    const newText = (id !== GenerationMethod.UNMASK_TEXT && selectedText.text) ? text.replace(selectedText.text, updatedText) : updatedText;
     setText(newText);
     setEditHistory([...editHistory.slice(0, editHistoryIndex + 1), newText]);
     setEditHistoryIndex((ind) => ind + 1);
