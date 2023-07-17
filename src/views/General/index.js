@@ -1,8 +1,8 @@
 import { View } from "@vkontakte/vkui";
 import Home from "./Home";
 import GenerationPage from "./Generation";
-import { VIEW_MAIN, useLocation } from "@happysanta/router";
-import { PanelAlias, ViewAlias } from "../../const";
+import { useLocation } from "@happysanta/router";
+import { PanelAlias } from "../../const";
 
 
 const GeneralView = ({id, go, dataset}) => {
@@ -24,7 +24,7 @@ const GeneralView = ({id, go, dataset}) => {
                 id={PanelAlias.PANEL_GENERATION}
                 go={go}
                 dataset={dataset}
-            />
+            />   
         </View>
     )
 }

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
-import { Group, Div, Spacing, Separator, Pagination, Spinner, Tabs, TabsItem, Search, usePlatform, Banner, Button, Image } from '@vkontakte/vkui';
+import { Icon24Users } from '@vkontakte/icons';
+import { Group, Div, Spacing, Separator, Pagination, Spinner, Tabs, TabsItem, Search, usePlatform, Banner, Button, Image, IconButton, SplitLayout, ModalRoot, ModalPage, ModalPageHeader } from '@vkontakte/vkui';
 import StrawberryBackend from '../../../api/SBBackend';
 
 import imgQuestion from "../../../media/question.gif";
@@ -11,6 +12,7 @@ import { useRouter } from '@happysanta/router';
 import GroupItem from './GroupItem';
 
 import styles from "./GroupList.module.css";
+import { Team } from '../../Team';
 
 
 export const FilterMode = {
@@ -28,6 +30,23 @@ export const FilterMode = {
 
 const GroupListHeader = ({showGroups, searchQuery, setSearchQuery, groups, totalPages, currentPage, filterMode, setCurrentPage, setFilterMode}) => {
 	const isMobile = (usePlatform() === 'android' || usePlatform() === 'ios');
+	const [activeModal, setActiveModal] = useState(null);
+	const modal = (
+        <ModalRoot activeModal={activeModal}>
+            <ModalPage
+                id="aboutUs"
+                onClose={() => setActiveModal(null)}
+                header={
+                    <ModalPageHeader>
+                        Наша команда
+                    </ModalPageHeader>
+                }
+				className={styles.about_us_modal}
+            >
+                <Team/>
+            </ModalPage>
+        </ModalRoot>
+    );
 	return (
 		<>
 			<Tabs>
@@ -44,6 +63,12 @@ const GroupListHeader = ({showGroups, searchQuery, setSearchQuery, groups, total
 						)
 					})
 				}
+				<IconButton
+					className={styles.about_us}
+					onClick={() => setActiveModal("aboutUs")}
+				>
+					<Icon24Users/>
+				</IconButton>
 			</Tabs>
 			{
 				showGroups &&
@@ -69,6 +94,7 @@ const GroupListHeader = ({showGroups, searchQuery, setSearchQuery, groups, total
 					className={isMobile ? styles.pagination_mobile_bar : null}
 				/>
 			}
+			{modal}
 		</>
 	)
 }

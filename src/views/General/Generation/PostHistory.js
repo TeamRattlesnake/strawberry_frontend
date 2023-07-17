@@ -16,6 +16,7 @@ const PostHistory = ({onFeedback, onRecover, onEditPost, posts, updateHistory}) 
         updateHistory()
     }, []);
     const [recoverablePosts, setRecoverablePosts] = useState([]);
+    const isMobile = usePlatform() === "ios" || usePlatform() === "android";
     return (
         <Group header={<Header>История запросов</Header>}>
             <Div>
@@ -23,7 +24,7 @@ const PostHistory = ({onFeedback, onRecover, onEditPost, posts, updateHistory}) 
                     posts && posts.length > 0
                     ?
                     <CardScroll
-                        size={(usePlatform() === "ios" || usePlatform() === "android") ? "l" : "s"}
+                        size={isMobile ? "l" : "s"}
                         className={styles.card_scroll}
                     >
                         {

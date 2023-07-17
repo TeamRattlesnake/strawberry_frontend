@@ -23,20 +23,26 @@ const parseQueryStringToObj = (qString) => {
 export const queryStr = parseQueryString(window.location.search);
 export const queryParams = parseQueryStringToObj(queryStr);
 
+
+export let APICallbacks = [];
+
 class API {
-    static makeRequest(options) {
+    static async makeRequest(options) {
         let endpoint = API_ENDPOINT;
         if (!endpoint.endsWith('/')) {
             endpoint += '/';
         }
         options.url = endpoint + options.url;
-        const res = axios({
+        let res = await axios({
             ...options,
             headers: {
                 Authorization: queryStr,
             }
         });
-        return res
+        APICallbacks.map(cb => {
+            res = cb(res);
+        });
+        return res;
     }
 
     static async getLSKey(key) {

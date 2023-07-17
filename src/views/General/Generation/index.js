@@ -27,6 +27,7 @@ import { useLocation, useRouter } from "@happysanta/router";
 import MediaBox from "./MediaBox";
 import Editor from "./Editor";
 import Service from "../../../api/Service";
+import { Team } from "../../Team";
 
 
 export const FeedbackType = {

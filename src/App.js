@@ -7,12 +7,9 @@ import { Icon28CancelCircleOutline, Icon28CheckCircleOutline, Icon28InfoCircleOu
 import ico_crying from "./media/crying.gif";
 import ico_normal from "./media/normal.gif";
 import ico_ok from "./media/ok.gif";
-//import Welcome from './views/Welcome';
-import WelcomeView from './views/Welcome';
-import GeneralView, { VIEW_GENERAL } from './views/General';
-//import StrawberryBackend from './api/SBBackend';
+import GeneralView from './views/General';
 import { showSlides, startupData } from './api/slides';
-import API from './api/API';
+import API, { APICallbacks } from './api/API';
 import { useLocation } from '@happysanta/router';
 import { ViewAlias } from './const';
 
@@ -27,27 +24,6 @@ const App = () => {
 			}
 		})
 	}, []);
-	/*
-	useEffect(() => {
-		StrawberryBackend.hasScope("groups")
-		.then((ok) => {
-			if (ok) {
-				StrawberryBackend.hasScope("wall")
-                .then((ok) => {
-                    if (ok) {
-                        setActiveView("general");
-                    }
-                })
-                .catch((error) => {
-                    console.log(error);
-                })
-			}
-		})
-		.catch((error) => {
-			console.log(error);
-		})
-	})
-	*/
 	const [snackbar, setSnackbar] = useState(null);
 	const [dataset, setDataset] = useState({
 		showSnackBar: ({text, type}) => {
@@ -89,6 +65,19 @@ const App = () => {
 		}
 	});
 
+	useEffect(() => {
+		APICallbacks.push((res) => {
+			if (res.status === 503) {
+				dataset.showSnackBar({
+					text: 'Слишком много запросов! Попробуйте позже.',
+					type: 'danger',
+				})
+				return null;
+			}
+			return res;
+		});
+	}, []);
+
 	const go = data => {setDataset((prev) => {
 		return {...prev, ...data};
 	})};
@@ -101,15 +90,6 @@ const App = () => {
 					<SplitLayout>
 						<SplitCol>
 							<Root activeView={location.getViewId()}>
-								{
-									/*
-									<WelcomeView
-										id="welcome"
-										go={() => setActiveView("general")}
-										dataset={dataset}
-									/>
-									*/
-								}
 								<GeneralView
 									id={ViewAlias.VIEW_GENERAL}
 									go={go}

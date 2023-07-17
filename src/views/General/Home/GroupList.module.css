@@ -1,3 +1,11 @@
 .pagination_mobile_bar > ul {
     justify-content: center;
 }
+
+.about_us {
+    margin-left: auto;
+}
+
+.about_us_modal {
+    z-index: 10;
+}
